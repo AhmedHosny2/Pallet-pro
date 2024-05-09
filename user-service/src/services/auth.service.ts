@@ -139,6 +139,7 @@ export class AuthService {
     // update the user's password
     user.password = hashedPassword;
     user.resetCode = null;
+    await this.produceEvent('user_reset_password', { email });
     await user.save();
   }
 
