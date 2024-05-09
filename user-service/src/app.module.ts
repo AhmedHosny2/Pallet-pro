@@ -9,6 +9,7 @@ import { PassportModule } from '@nestjs/passport';
 import { JwtModule } from '@nestjs/jwt';
 import { env } from 'process';
 import {MailerModule} from '@nestjs-modules/mailer';
+import {GoogleStrategy} from './strategies/google.strategy';
 
 @Module({
   imports: [ // the modules that will be imported, we will use MongooseModule to connect to the MongoDB database
@@ -40,7 +41,7 @@ import {MailerModule} from '@nestjs-modules/mailer';
     }),
   ],
   controllers: [AuthController], // to handle requests and responses, they define the routes and the corresponding HTTP request methods
-  providers: [AuthService, ...identityProviders, ...databaseProviders], // to define components within the application that can be injected into other components
+  providers: [AuthService, ...identityProviders, ...databaseProviders, GoogleStrategy], // to define components within the application that can be injected into other components
   exports: [...databaseProviders] // which providers should be available to other modules to import
 })
 export class AppModule {}

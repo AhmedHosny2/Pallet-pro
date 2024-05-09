@@ -1,10 +1,11 @@
-import { Controller, Post, Body, Res, HttpStatus } from '@nestjs/common';
+import { Controller, Get, Post, Body, Req, Res, HttpStatus, UseGuards } from '@nestjs/common';
 import { RegisterDTO } from '../dtos/register.dto';
 import { User } from '../interfaces/user.interface';
 import { AuthService } from '../services/auth.service';
 import { LoginDto } from '../dtos/login.dto';
 import { Response } from 'express';
 import { ResetPasswordDto } from '../dtos/reset-password.dto';
+import { GoogleAuthGuard } from '../guards/google-auth.guard';
 
 @Controller('auth') // kolohom hayob2o b /auth/...
 export class AuthController {
@@ -52,7 +53,18 @@ async resetPasswordConfirm(
     return { message: error.message };
   }
 }
+
+@Get('google')
+@UseGuards(GoogleAuthGuard)
+async googleAuth(@Req() req:any) {}
+
+@Get('google/callback')
+@UseGuards(GoogleAuthGuard)
+async googleAuthRedirect(@Req() req:any, @Res() res: any) {
+  const user = await this.authService.googleLogin(req.user);
+  res.redirect('/')
   }
+}
 
 /*
   The controller defines endpoints (routes) for the application and specifies the CRUD operations that can be performed on the user data.

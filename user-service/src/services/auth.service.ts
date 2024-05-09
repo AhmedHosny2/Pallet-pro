@@ -10,12 +10,15 @@ import { log } from 'console';
 import e from 'express';
 import { JwtService } from '@nestjs/jwt';
 import {MailerService} from '@nestjs-modules/mailer';
+import { ResetPasswordDto } from '../dtos/reset-password.dto';
+import {OAuth2Client} from 'google-auth-library';
 
 
 @Injectable()
 
 
 export class AuthService {
+    private googleOAuthClient: OAuth2Client;
     private kafka: Kafka;
     private producer;
     private consumer;
@@ -24,6 +27,13 @@ export class AuthService {
     private readonly mailerService: MailerService,
     @InjectModel('User') private readonly userModel: Model<User>,// to use the user schema, we need to inject the user model
   ) {
+    this.googleOAuthClient = new OAuth2Client ({
+      clientId: '142166430996-t99imiu4efu85ohe2uqaefgd02ea4d7o.apps.googleusercontent.com',
+      clientSecret: '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',
+      redirectUri: 'http://localhost:3000/auth/google/callback'
+    }
+  );
+
     this.kafka = new Kafka({
         clientId: 'user-service',
         brokers: ['localhost:9092'],
@@ -98,8 +108,41 @@ export class AuthService {
     return {token}; 
   }
 
+  async googleLogin(token: string): Promise<{ token: string }> {
+    const ticket = await this.googleOAuthClient.verifyIdToken({
+        idToken: token,
+        audience: '142166430996-t99imiu4efu85ohe2uqaefgd02ea4d7o.apps.googleusercontent.com',
+    });
+
+    const payload = ticket.getPayload();
+    const email = payload['email'];
+
+    // Check if the user exists in the database
+    let user = await this.findUserByEmail(email);
+
+    if (!user) {
+        // If the user does not exist, register them
+        const newUser: RegisterDTO = {
+            email: email,
+            password: 'tempPassword', 
+            first_name: payload['given_name'] || '',
+            last_name: payload['family_name'] || '',
+        };
+
+        user = await this.register(newUser);
+    }
+
+    // Produce the login event
+    await this.produceEvent('user_login', { email });
+
+    // Generate JWT token
+    const authToken = this.jwtService.sign({ email: user.email, sub: user._id });
+
+    return { token: authToken };
+}
+
   async register(registerDto: RegisterDTO): Promise<User> {
-    console.log(' Is this register eve being called?')
+    console.log(' Is this register even being called?')
     try{
     const hashedPassword = await hash(registerDto.password, 10);
     console.log('Password hashed successfully:', hashedPassword);
