@@ -1,11 +1,13 @@
-import {IsString} from 'class-validator';
+import {IsString, IsEmail, IsNotEmpty} from 'class-validator';
 
 export class LoginDto {
     @IsString()
+    @IsEmail()
+    @IsNotEmpty()
     readonly email: string;
 
     @IsString()
-    readonly password: string;
+    password: string;
 
     toString() {
         return JSON.stringify({

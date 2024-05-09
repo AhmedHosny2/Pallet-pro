@@ -9,6 +9,8 @@ import {Kafka, logLevel} from 'kafkajs';
 import { log } from 'console';
 import e from 'express';
 import { JwtService } from '@nestjs/jwt';
+import {MailerService} from '@nestjs-modules/mailer';
+
 
 @Injectable()
 
@@ -19,6 +21,7 @@ export class AuthService {
     private consumer;
   constructor(
     private jwtService: JwtService,
+    private readonly mailerService: MailerService,
     @InjectModel('User') private readonly userModel: Model<User>,// to use the user schema, we need to inject the user model
   ) {
     this.kafka = new Kafka({
@@ -43,7 +46,8 @@ export class AuthService {
 
         await this.consumer.subscribe({ topic: 'user_register' });
         await this.consumer.subscribe({ topic: 'user_login' });
-        console.log('Consumer subscribed to topics: user_register, user_login');
+        await this.consumer.subscribe({ topic: 'user_reset_password' });
+        console.log('Consumer subscribed to topics: user_register, user_login, user_reset_password');
 
         await this.consumer.run({
             eachMessage: async ({ topic, partition, message }) => {
@@ -53,6 +57,9 @@ export class AuthService {
                   break;
                 case 'user_login':
                   console.log('User logged in:', JSON.parse(message.value.toString()));
+                  break;
+                case 'user_reset_password':
+                  console.log('User reset password:', JSON.parse(message.value.toString()));
                   break;
                 default:
                   console.log('Unknown event:', topic);
@@ -77,8 +84,9 @@ export class AuthService {
     // print all the data from the user
     console.log(user.email, user.password, user.first_name, user.last_name, user.role, user.created_at, user.updated_at);
     console.log(password, user.password);
-    if (password !== user.password) {
-      throw new Error('Invalid password');
+    const passwordMatch = await compare(password, user.password);
+    if (!passwordMatch) {
+        throw new Error('Invalid password');
     }
 
     // produce the login event
@@ -91,23 +99,70 @@ export class AuthService {
   }
 
   async register(registerDto: RegisterDTO): Promise<User> {
+    console.log(' Is this register eve being called?')
+    try{
     const hashedPassword = await hash(registerDto.password, 10);
+    console.log('Password hashed successfully:', hashedPassword);
+
     const userDto = { ...registerDto, password: hashedPassword }; // we hashed the password
 
     const toBeReturned = await this.registerUser(userDto); // we call the registerUser method from the UserService class and pass the userDto to store the user data in the database
+    console.log('User registered successfully:', toBeReturned);
 
     // produce the register event
     await this.produceEvent('user_register', { email: registerDto.email });
+    console.log('User register event produced.');
 
     return toBeReturned; 
+  } 
+  catch (error) {
+    console.error('Error registering user:', error);
+    throw error;
+  }
+}
+
+  async resetPassword(email: string, resetCode: string, newPassword: string): Promise<void> {
+    const user = await this.findUserByEmail(email);
+    if (!user) {
+      throw new Error('User not found');
+    }
+
+    // validate the reset code
+    if (user.resetCode !== resetCode) {
+      throw new Error('Invalid reset code');
+    }
+
+    // hash the new password
+    const hashedPassword = await hash(newPassword, 10);
+    console.log('Password hashed successfully:', hashedPassword);
+
+    // update the user's password
+    user.password = hashedPassword;
+    user.resetCode = null;
+    await user.save();
   }
 
-  private generateSessionId(): string {
-    // Generate a session identifier using any suitable method
-    // For simplicity, let's use a simple random string generator bas we will change it to jwt token later
-    const randomString = Math.random().toString(36).substring(2);
-    return randomString;
+  async generateResetCode(email: string): Promise<string> { 
+    const user = await this.findUserByEmail(email);
+    if (!user) {
+      throw new Error('User not found');
+    }
+
+    // generate a random reset code
+    const resetCode = Math.random().toString(36).substring(2, 8);
+    console.log('Reset code generated:', resetCode);
+
+    // update the user's reset code
+    user.resetCode = resetCode;
+    await user.save();
+
+    // send the reset code to the user
+    await this.sendPasswordResetEmail(email, resetCode);
+    console.log('Password reset email sent.');
+
+    return resetCode;
   }
+
 
   private async produceEvent(topic: string, value: any) {
     await this.producer.send({
@@ -117,12 +172,26 @@ export class AuthService {
     }
 
     async registerUser(registerDTO: RegisterDTO): Promise<User> { // this method takes a RegisterDTO as input and returns a User object.
+      console.log('RegisterUser method called with email:', registerDTO.email)
       const user = new this.userModel(registerDTO);
       return user.save();
     }
   
     async findUserByEmail(email: string): Promise<User | null> { // this method takes an email as input and returns a User object or null if not found.
       return this.userModel.findOne({ email }).exec();
+    }
+
+    async sendEmail(receiver: string, subject: string, content: string): Promise<void> {
+      await this.mailerService.sendMail({
+        to: receiver,
+        subject: subject,
+        html: content,
+      });
+    }
+
+    async sendPasswordResetEmail(email: string, resetCode: string): Promise<void> {
+      const content = `<p>Your password reset code is: ${resetCode}</p>`;
+      await this.sendEmail(email, 'Password Reset Verification Code', content);
     }
 
 }

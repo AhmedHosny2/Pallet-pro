@@ -7,12 +7,14 @@ import { AuthService } from './services/auth.service';
 import { identityProviders } from './identity.providers';
 import { PassportModule } from '@nestjs/passport';
 import { JwtModule } from '@nestjs/jwt';
+import { env } from 'process';
+import {MailerModule} from '@nestjs-modules/mailer';
 
 @Module({
   imports: [ // the modules that will be imported, we will use MongooseModule to connect to the MongoDB database
     MongooseModule.forRootAsync({
       useFactory: () => ({
-        uri: 'mongodb+srv://test:test@cluster0.lvfdivg.mongodb.net/',
+        uri: env.MONGODB_URI,
       }),
     }),
     MongooseModule.forFeature([{ name: 'User', schema: UserSchema }]), // the models that will be used in this module
@@ -20,7 +22,22 @@ import { JwtModule } from '@nestjs/jwt';
     JwtModule.register({
       secret: 'Darwizzy',
       signOptions: { expiresIn: '60s' },
-    })
+    }),
+    MailerModule.forRoot({
+      transport: {
+        host: 'smtp.gmail.com',
+        port: 587,
+        secure: false,
+        auth: {
+          user: "DarwinsAgents@gmail.com",
+          pass: "mombjfhrqmlofkdj",
+        },
+        authMethod: 'LOGIN'
+      },
+      defaults: {
+        from: env.GMAIL_USER, 
+      },
+    }),
   ],
   controllers: [AuthController], // to handle requests and responses, they define the routes and the corresponding HTTP request methods
   providers: [AuthService, ...identityProviders, ...databaseProviders], // to define components within the application that can be injected into other components
