@@ -24,12 +24,15 @@ export class RegisterDTO {
     @MaxLength(20)
     readonly last_name: string;
 
+    refreshToken?: string;
+
     toString() {
         return JSON.stringify({
             email: this.email,
             password: this.password,
             first_name: this.first_name,
-            last_name: this.last_name
+            last_name: this.last_name,
+            refreshToken: this.refreshToken //???
         });
 
     }

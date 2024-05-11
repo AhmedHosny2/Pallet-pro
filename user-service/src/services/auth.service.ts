@@ -99,16 +99,35 @@ export class AuthService {
         throw new Error('Invalid password');
     }
 
+
     // produce the login event
     await this.produceEvent('user_login', { email: loginDto.email });
+    
+    //HEREEE
+    const tokens = await this.getTokens(user._id, user.email);
+    console.log('Tokens generated:', tokens);
+    await this.updateRefreshToken(user._id, tokens.refreshToken);
+    //ABOVEEEEE
+
 
     // generate the jwt token
-    const token = this.jwtService.sign({ email: user.email, sub: user._id });
+//    const token = this.jwtService.sign({ email: user.email, sub: user._id });
 
-    return {token}; 
+    return tokens; 
   }
 
-  async googleLogin(token: string): Promise<{ token: string }> {
+  // async logout(userId: string): Promise<void> {
+  //   const user = await this.userModel.findById(userId).exec();
+  //   if (!user) {
+  //     throw new Error('User not found');
+  //   }
+  //   // remove the refresh token
+  //   await this.updateRefreshToken(user._id, null);
+  // }
+
+  async googleLogin(req: any): Promise<{ token: string }> {
+    const token = req.headers.authorization.split(' ')[1]; // Extract token from authorization header
+
     const ticket = await this.googleOAuthClient.verifyIdToken({
         idToken: token,
         audience: '142166430996-t99imiu4efu85ohe2uqaefgd02ea4d7o.apps.googleusercontent.com',
@@ -141,9 +160,12 @@ export class AuthService {
     return { token: authToken };
 }
 
-  async register(registerDto: RegisterDTO): Promise<User> {
+  async register(registerDto: RegisterDTO): Promise<any> {
     console.log(' Is this register even being called?')
     try{
+      if (await this.findUserByEmail(registerDto.email)) {
+        throw new Error('User already exists');
+      }
     const hashedPassword = await hash(registerDto.password, 10);
     console.log('Password hashed successfully:', hashedPassword);
 
@@ -152,11 +174,19 @@ export class AuthService {
     const toBeReturned = await this.registerUser(userDto); // we call the registerUser method from the UserService class and pass the userDto to store the user data in the database
     console.log('User registered successfully:', toBeReturned);
 
+    // Added this part
+    const tokens = await this.getTokens(toBeReturned._id, toBeReturned.email);
+    console.log('Tokens generated:', tokens);
+    await this.updateRefreshToken(toBeReturned._id, tokens.refreshToken);
+    // Above
+
+
     // produce the register event
     await this.produceEvent('user_register', { email: registerDto.email });
     console.log('User register event produced.');
 
-    return toBeReturned; 
+    //return toBeReturned;
+    return tokens; 
   } 
   catch (error) {
     console.error('Error registering user:', error);
@@ -236,6 +266,37 @@ export class AuthService {
     async sendPasswordResetEmail(email: string, resetCode: string): Promise<void> {
       const content = `<p>Your password reset code is: ${resetCode}</p>`;
       await this.sendEmail(email, 'Password Reset Verification Code', content);
+    }
+
+    async updateRefreshToken(userId: string, refreshToken: string){
+      const hashedRefreshToken = refreshToken ? await hash(refreshToken, 10) : null;
+      await this.userModel.updateOne({ _id: userId }, { refreshToken: hashedRefreshToken });
+    }
+    
+    async getTokens(userId: string, email:string): Promise<{ token: string, refreshToken: string }> {
+      const [token, refreshToken] = await Promise.all([
+        this.jwtService.signAsync(
+          {
+            sub: userId,
+            email
+          },
+          {
+            secret: "secret",
+            expiresIn: '60s'
+          },
+        ),
+        this.jwtService.signAsync(
+          {
+            sub: userId,
+            email
+          },
+          {
+            secret: "refreshSecret",
+            expiresIn: '120s' // change laterrrrrrrrrrr
+          },
+        ),
+      ]);
+      return { token, refreshToken };
     }
 
 }

@@ -8,6 +8,7 @@ export interface User extends Document {
     readonly created_at: Date;
     readonly updated_at: Date;
     resetCode?: string;
+    refreshToken?: string;
 }
 
 /*

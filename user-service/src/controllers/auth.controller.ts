@@ -6,6 +6,7 @@ import { LoginDto } from '../dtos/login.dto';
 import { Response } from 'express';
 import { ResetPasswordDto } from '../dtos/reset-password.dto';
 import { GoogleAuthGuard } from '../guards/google-auth.guard';
+import { AccessTokenGuard } from '../guards/accessToken.guard';
 
 @Controller('auth') // kolohom hayob2o b /auth/...
 export class AuthController {
@@ -20,9 +21,18 @@ export class AuthController {
 
   @Post('login') // hena hatob2a b /auth/login
   async login(@Body() loginDto: LoginDto): Promise<{ token: string }> { //to be done: change this to jwt token instead of session id
-    const { token } = await this.authService.login(loginDto);
-    return { token };
+ //   const { token } = await this.authService.login(loginDto);
+  //  return { token };
+  return this.authService.login(loginDto);
   }
+
+  // @UseGuards(AccessTokenGuard)
+  // @Get('logout') // hena hatob2a b /auth/logout
+  // async logout(@Req() req: any): Promise<any> {
+  //   req.session = null;
+  //   this.authService.logout(req.user['sub']);
+  // }
+
   
   @Post('reset-password')
 async resetPassword(
@@ -55,14 +65,27 @@ async resetPasswordConfirm(
 }
 
 @Get('google')
-@UseGuards(GoogleAuthGuard)
-async googleAuth(@Req() req:any) {}
+  @UseGuards(GoogleAuthGuard)
+  async googleAuth() {}
 
-@Get('google/callback')
-@UseGuards(GoogleAuthGuard)
-async googleAuthRedirect(@Req() req:any, @Res() res: any) {
-  const user = await this.authService.googleLogin(req.user);
-  res.redirect('/')
+  @Get('google/callback')
+  @UseGuards(GoogleAuthGuard)
+  async googleAuthRedirect(@Req() req: any, @Res() res: any) {
+    try {
+      console.log('before const token in google/callback')
+      const authorizationHeader = req.headers.authorization;
+      if (!authorizationHeader) {
+        throw new Error('Authorization header is missing');
+      }
+      const token = req.headers.authorization.split(' ')[1]; // Extract token from authorization header
+      console.log('after const token:', token);
+      const { token: authToken } = await this.authService.googleLogin(token); // Pass the token to the authService method
+      console.log('after const authToken:', authToken)
+      res.redirect('/');
+    } catch (error) {
+      console.error(error);
+      res.redirect('/error');
+    }
   }
 }
 

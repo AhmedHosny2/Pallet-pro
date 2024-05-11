@@ -9,4 +9,5 @@ export const UserSchema = new mongoose.Schema({
     created_at: { type: Date, default: Date.now },
     updated_at: { type: Date, default: Date.now },
     resetCode: { type: String, required: false },
+    refreshToken: { type: String, required: false }
 });

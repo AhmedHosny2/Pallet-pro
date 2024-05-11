@@ -5,6 +5,13 @@ import { Injectable } from '@nestjs/common';
 import { LoginDto } from 'src/dtos/login.dto';
 import { UnauthorizedException } from '@nestjs/common';
 
+// Added this
+type JwtPayload = {
+    sub: string;
+    email: string;
+}
+// Hmmmmm
+
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy, 'jwt'){
     constructor(private readonly authService: AuthService){
@@ -15,9 +22,15 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt'){
         });
     }
 
-    async validate(payload: any):Promise<any>{
-        console.log(payload);
+    // async validate(payload: any):Promise<any>{
+    //     console.log(payload);
+    //     return payload;
+    // }
+
+    // lama nshoof el extra part deh
+     async validate(payload: JwtPayload){
         return payload;
-    }
+     }
+     
 
 }
