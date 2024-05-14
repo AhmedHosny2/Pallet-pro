@@ -4,7 +4,7 @@ import { Model } from 'mongoose';
 import { CreateProductDto } from '../dtos/create-product.dto';
 import { UpdateProductDto } from '../dtos/update-product.dto';
 import { ProductInterface } from '../interfaces/product.interface/product.interface.interface';
-import { Kafka, logLevel } from 'kafkajs';
+import { Kafka, Partitioners, logLevel } from 'kafkajs';
 import { log } from 'console';
 import e from 'express';
 import { ViewAllProductsDto } from '../dtos/view-all-products.dto';
@@ -22,7 +22,7 @@ export class ProductService {
       clientId: 'product-service',
       brokers: ['localhost:9092'],
     });
-    this.producer = this.kafka.producer();
+    this.producer = this.kafka.producer({  });
     this.consumer = this.kafka.consumer({ groupId: 'product-service-group' });
   }
 
@@ -46,9 +46,11 @@ export class ProductService {
 
         await this.consumer.run({
             eachMessage: async ({ topic, partition, message }) => {
+            console.log('Consumer running');
+
               switch (topic) {
                 case 'view_all_products':
-                  console.log('All products:', JSON.parse(message.value.toString()));
+                  console.log('All products here kafka:', JSON.parse(message.value.toString()));
                   break;
                 case 'view_product':
                   console.log('product:', JSON.parse(message.value.toString()));
@@ -63,16 +65,19 @@ export class ProductService {
           console.error('Error starting consumer:', error);
           throw error;
         }
+        private async produceEvent(topic: string, value: any) {
+            await this.producer.send({
+              topic,
+              messages: [{ value: JSON.stringify(value) }]
+            }); 
+            }
         // view all products
         async getAllProducts() {
             console.log('Getting all products');
-            ('Getting all products');
+         
             const products = await this.productModel.find().exec();
             console.log('All products:', products);
-            await this.producer.send({
-              topic: 'view_all_products',
-              messages: [{ value: JSON.stringify(products) }],
-            });
+            await this.produceEvent('view_all_products', {products});
             return products;
           }
 
