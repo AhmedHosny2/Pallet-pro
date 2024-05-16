@@ -1,16 +1,11 @@
-
 import * as mongoose from 'mongoose';
-export const ProductSchema  = new mongoose.Schema({
+export const ProductSchema = new mongoose.Schema({
+  title: { type: String, required: true },
+  description: { type: String, required: true },
+  images: { type: Array, required: true },
 
-title : {type: String, required: true},
-description  :{type: String, required: true},
-image : {type: String, required: true},
+  price: { type: Number, required: true },
 
-price  :{type: Number, required: true},
-
-stock : {type: Number, required: true},
-
-
-
-
+  stock: { type: Number, required: true },
+  rentList  : { type: Array, required: false },
 });

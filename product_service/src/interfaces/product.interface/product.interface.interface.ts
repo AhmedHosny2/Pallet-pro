@@ -7,5 +7,12 @@ readonly title: string;
 readonly description: string;
 readonly image: string;
 readonly price: string;
-readonly stock: string;
+ stock: string;
+ rentList:
+    {
+    renter: string;
+    rentDate: string;
+    returnDate: string;
+    quantity: number;
+    }[];
 }

@@ -13,13 +13,16 @@ export class CreateProductDto {
   @IsString()
   description: string;
   @IsString()
-  image: string;
+  images:  Array<string>;
   @IsNotEmpty()
   price: string;
   @IsNotEmpty()
   stock: string;
+  @IsNotEmpty()
+  @IsString()
+  specifications: string;
 
   toString() {
-    return `title: ${this.title}, description: ${this.description}, image: ${this.image}, price: ${this.price}, stock: ${this.stock}`;
+    return `title: ${this.title}, description: ${this.description}, image: ${this.images}, price: ${this.price}, stock: ${this.stock}`;
   }
 }

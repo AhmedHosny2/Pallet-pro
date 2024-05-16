@@ -8,6 +8,7 @@ import { Kafka, Partitioners, logLevel } from 'kafkajs';
 import { log } from 'console';
 import e from 'express';
 import { ViewAllProductsDto } from '../dtos/view-all-products.dto';
+import { RentProductDto } from 'src/dtos/rent-product.dto';
 
 @Injectable()
 export class ProductService {
@@ -79,6 +80,42 @@ export class ProductService {
             console.log('All products:', products);
             await this.produceEvent('view_all_products', {products});
             return products;
+          }
+
+          async createProduct(createProductDto: CreateProductDto) {
+            console.log('Creating a product');
+            const product = new this.productModel(createProductDto);
+            await product.save();
+            console.log('Product created:', product);
+            return product;
+          }
+          async getProductById(id: string) {
+            console.log('Getting product by id:', id);
+            const product = await this.productModel.findById(id).exec();
+            console.log('Product:', product);
+            await this.produceEvent('view_product', {product});
+            return product;
+          }
+          async rentProduct(id: string, rentProductDto: RentProductDto) {
+            console.log('Renting a product');
+            const product = await this.productModel.findById(id).exec();
+            console.log('Product:', product);
+            if (Number(product.stock) < rentProductDto.quantity) {
+              throw new Error('Not enough stock');
+            }
+            product.stock = (Number(product.stock) - rentProductDto.quantity).toString(); // Convert to string
+           
+           // add data to rent array
+           let renter = 1;
+            product.rentList.push({
+              quantity: rentProductDto.quantity,
+              rentDate: rentProductDto.rentDate,
+              returnDate: rentProductDto.returnDate,
+              renter: renter.toString(),
+            });
+            await product.save();
+            console.log('Product rented:', product);
+            return product;
           }
 
 }
