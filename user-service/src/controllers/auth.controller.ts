@@ -7,6 +7,7 @@ import { Response } from 'express';
 import { ResetPasswordDto } from '../dtos/reset-password.dto';
 import { GoogleAuthGuard } from '../guards/google-auth.guard';
 import { AccessTokenGuard } from '../guards/accessToken.guard';
+import { VerifyEmailDto } from 'src/dtos/verify-email.dto';
 
 @Controller('auth') // kolohom hayob2o b /auth/...
 export class AuthController {
@@ -16,7 +17,18 @@ export class AuthController {
 
   @Post('register') // hena hatob2a b /auth/register
   async register(@Body() registerDto: RegisterDTO): Promise<User> {
-    return this.authService.register(registerDto);
+    return await this.authService.register(registerDto);
+  }
+
+  @Post('verify-email')
+  async verifyEmail(@Body() verifyEmailDto: VerifyEmailDto): Promise<{ message: string }> {
+    try {
+      const { email, verificationCode } = verifyEmailDto;
+      const user = await this.authService.verifyEmail(email, verificationCode);
+      return { message: 'Email verified successfully. You can now log in.' };
+  } catch (error) {
+      return { message: error.message };
+  }
   }
 
   @Post('login') // hena hatob2a b /auth/login

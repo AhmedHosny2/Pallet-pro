@@ -9,6 +9,8 @@ export interface User extends Document {
     readonly updated_at: Date;
     resetCode?: string;
     refreshToken?: string;
+    verificationCode?: string;
+    verified: boolean;
 }
 
 /*

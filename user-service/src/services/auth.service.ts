@@ -12,6 +12,7 @@ import { JwtService } from '@nestjs/jwt';
 import {MailerService} from '@nestjs-modules/mailer';
 import { ResetPasswordDto } from '../dtos/reset-password.dto';
 import {OAuth2Client} from 'google-auth-library';
+import { VerifyEmailDto } from 'src/dtos/verify-email.dto';
 
 
 @Injectable()
@@ -91,6 +92,10 @@ export class AuthService {
       throw new Error('User not found');
     }
 
+    if(!user.verified){
+      throw new Error('User not verified');
+    }
+
     // print all the data from the user
     console.log(user.email, user.password, user.first_name, user.last_name, user.role, user.created_at, user.updated_at);
     console.log(password, user.password);
@@ -159,40 +164,30 @@ export class AuthService {
 
     return { token: authToken };
 }
-
-  async register(registerDto: RegisterDTO): Promise<any> {
-    console.log(' Is this register even being called?')
-    try{
-      if (await this.findUserByEmail(registerDto.email)) {
-        throw new Error('User already exists');
-      }
+async register(registerDto: RegisterDTO): Promise<User> {
+  try {
+    if (await this.findUserByEmail(registerDto.email)) {
+      throw new Error('User already exists');
+    }
     const hashedPassword = await hash(registerDto.password, 10);
     console.log('Password hashed successfully:', hashedPassword);
 
+    const verificationCode = Math.random().toString(36).substring(2, 8); // Generate verification code
     const userDto = { ...registerDto, password: hashedPassword }; // we hashed the password
-
-    const toBeReturned = await this.registerUser(userDto); // we call the registerUser method from the UserService class and pass the userDto to store the user data in the database
-    console.log('User registered successfully:', toBeReturned);
-
-    // Added this part
-    const tokens = await this.getTokens(toBeReturned._id, toBeReturned.email);
-    console.log('Tokens generated:', tokens);
-    await this.updateRefreshToken(toBeReturned._id, tokens.refreshToken);
-    // Above
-
+    const registeredUser = await this.registerUser(userDto, verificationCode); // Pass verification code
+    await this.sendVerificationEmail(registerDto.email, verificationCode); // Pass verification code
 
     // produce the register event
     await this.produceEvent('user_register', { email: registerDto.email });
     console.log('User register event produced.');
 
-    //return toBeReturned;
-    return tokens; 
-  } 
-  catch (error) {
+    return registeredUser;  
+  } catch (error) {
     console.error('Error registering user:', error);
     throw error;
   }
 }
+
 
   async resetPassword(email: string, resetCode: string, newPassword: string): Promise<void> {
     const user = await this.findUserByEmail(email);
@@ -237,6 +232,28 @@ export class AuthService {
     return resetCode;
   }
 
+  async verifyEmail(email: string, verificationCode: string): Promise<User> {
+    const user = await this.findUserByEmail(email);
+    if (!user) {
+        throw new Error('User not found');
+    }
+
+    // Log the verification codes for debugging
+    console.log('User Verification Code:', user.verificationCode);
+    console.log('Input Verification Code:', verificationCode);
+
+    // Check if the verification codes match
+    if (user.verificationCode !== verificationCode) {
+        throw new Error('Invalid verification code');
+    }
+
+    // If the verification codes match, proceed with verification
+    user.verified = true;
+    user.verificationCode = null;
+    await user.save();
+    return user;
+}
+
 
   private async produceEvent(topic: string, value: any) {
     await this.producer.send({
@@ -245,9 +262,10 @@ export class AuthService {
     }); 
     }
 
-    async registerUser(registerDTO: RegisterDTO): Promise<User> { // this method takes a RegisterDTO as input and returns a User object.
+    async registerUser(registerDTO: RegisterDTO, verificationCode: string): Promise<User> {
       console.log('RegisterUser method called with email:', registerDTO.email)
-      const user = new this.userModel(registerDTO);
+      const user = new this.userModel({ ...registerDTO, verificationCode });
+      // await this.sendVerificationEmail(registerDTO.email, verificationCode);
       return user.save();
     }
   
@@ -262,6 +280,13 @@ export class AuthService {
         html: content,
       });
     }
+
+    async sendVerificationEmail(email: string, verificationCode: string): Promise<void> {
+      const content = `<p>Your verification code is: ${verificationCode}</p>`;
+      await this.sendEmail(email, 'Email Verification Code', content);
+      await this.userModel.updateOne({ email },{ verificationCode })
+    }
+    
 
     async sendPasswordResetEmail(email: string, resetCode: string): Promise<void> {
       const content = `<p>Your password reset code is: ${resetCode}</p>`;

@@ -26,6 +26,7 @@ export class RegisterDTO {
 
     refreshToken?: string;
 
+
     toString() {
         return JSON.stringify({
             email: this.email,
