@@ -8,4 +8,5 @@ export const ProductSchema = new mongoose.Schema({
 
   stock: { type: Number, required: true },
   rentList  : { type: Array, required: false },
+  ratingList: { type: Array, required: false },
 });

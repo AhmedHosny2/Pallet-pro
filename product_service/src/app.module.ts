@@ -8,7 +8,7 @@ import { ProductSchema } from './schemas/product.schema/product.schema'
 import { ProductService } from './services/product.service';
 import { identityProviders } from './identity.providers';
 import { env } from 'process';
-const uri ="mongodb+srv://user:123@cluster0.m543dzd.mongodb.net/"
+const uri ="mongodb+srv://admin:ma82345678omm@cluster0.ynli9r8.mongodb.net/"
 @Module({
   imports: [MongooseModule.forRootAsync({
     useFactory: () => ({

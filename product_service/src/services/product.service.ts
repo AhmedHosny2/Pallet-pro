@@ -9,6 +9,7 @@ import { log } from 'console';
 import e from 'express';
 import { ViewAllProductsDto } from '../dtos/view-all-products.dto';
 import { RentProductDto } from 'src/dtos/rent-product.dto';
+import { RateProductDto } from 'src/dtos/rateProductDto.dto';
 
 @Injectable()
 export class ProductService {
@@ -41,9 +42,12 @@ export class ProductService {
 
         await this.consumer.subscribe({ topic: 'view_all_products' });
         await this.consumer.subscribe({ topic: 'view_product' });
+        await this.consumer.subscribe({ topic: 'rent_product' });
+        await this.consumer.subscribe({ topic: 'rate_product' });
+
 
         // comma and add here others 
-        console.log('Consumer subscribed to topics: view_all_products, view_product');
+        console.log('Consumer subscribed to topics: view_all_products, view_product, rent_product, rate_product');
 
         await this.consumer.run({
             eachMessage: async ({ topic, partition, message }) => {
@@ -55,6 +59,14 @@ export class ProductService {
                   break;
                 case 'view_product':
                   console.log('product:', JSON.parse(message.value.toString()));
+                  break;
+                case 'rent_product':
+                  await this.rentProduct(JSON.parse(message.value.toString()).id, JSON.parse(message.value.toString()).rentProductDto);
+                  console.log('product rented:', JSON.parse(message.value.toString()));
+                  break;
+                case 'rate_product':
+                  await this.rateProduct(JSON.parse(message.value.toString()).id, JSON.parse(message.value.toString()).rateProductDto);
+                  console.log('product rated:', JSON.parse(message.value.toString()));
                   break;
                 default:
                   console.log('Unknown event:', topic);
@@ -81,7 +93,21 @@ export class ProductService {
             await this.produceEvent('view_all_products', {products});
             return products;
           }
-
+            async rateProduct(id: string, rateProductDto: RateProductDto) {
+            console.log('Rating a product');
+            const product = await this.productModel.findById(id).exec();
+            console.log('Product:', product);
+  // push in ratting list 
+            product.ratingList.push({
+              rating: rateProductDto.rating,
+              review: rateProductDto.review,
+              userId: rateProductDto.userId,
+            });
+            await product.save();
+            console.log('Product rated:', product);
+            return product;
+          }
+          
           async createProduct(createProductDto: CreateProductDto) {
             console.log('Creating a product');
             const product = new this.productModel(createProductDto);

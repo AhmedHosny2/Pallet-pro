@@ -15,4 +15,10 @@ readonly price: string;
     returnDate: string;
     quantity: number;
     }[];
+    ratingList:
+        {
+        rating: number;
+        review: string;
+        userId: string;
+        }[];
 }

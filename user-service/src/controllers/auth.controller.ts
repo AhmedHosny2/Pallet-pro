@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Req, Res, HttpStatus, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Body, Req, Res, HttpStatus, UseGuards, Param } from '@nestjs/common';
 import { RegisterDTO } from '../dtos/register.dto';
 import { User } from '../interfaces/user.interface';
 import { AuthService } from '../services/auth.service';
@@ -7,6 +7,7 @@ import { Response } from 'express';
 import { ResetPasswordDto } from '../dtos/reset-password.dto';
 import { GoogleAuthGuard } from '../guards/google-auth.guard';
 import { AccessTokenGuard } from '../guards/accessToken.guard';
+import { RateProductDto } from 'src/dtos/rateProductDto.dto';
 
 @Controller('auth') // kolohom hayob2o b /auth/...
 export class AuthController {
@@ -86,6 +87,12 @@ async resetPasswordConfirm(
       console.error(error);
       res.redirect('/error');
     }
+  }
+  @Post('rate/:id')
+  async rateProduct(@Body() rateProductDto: RateProductDto, @Param
+  ('id') id: string
+  ): Promise<any> {
+    return this.authService.rateProduct(rateProductDto, id);
   }
 }
 
