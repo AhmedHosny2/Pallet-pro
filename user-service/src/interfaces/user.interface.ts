@@ -11,6 +11,7 @@ export interface User extends Document {
     refreshToken?: string;
     verificationCode?: string;
     verified: boolean;
+    selected_address_id: string;
     wishList: {
 
         title: string;

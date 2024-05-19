@@ -12,5 +12,6 @@ export const UserSchema = new mongoose.Schema({
     refreshToken: { type: String, required: false },
     verificationCode: { type: String, required: false },
     verified: { type: Boolean, default: false },
+    selected_address_id: { type: mongoose.Schema.Types.ObjectId, ref: 'Address' },
     wishList: { type: Array, default: [] },
 });

@@ -205,9 +205,9 @@ async register(registerDto: RegisterDTO): Promise<User> {
     const registeredUser = await this.registerUser(userDto, verificationCode); // Pass verification code
     await this.sendVerificationEmail(registerDto.email, verificationCode); // Pass verification code
 
-      // produce the register event
-      await this.produceEvent('user_register', { email: registerDto.email });
-      console.log('User register event produced.');
+    // produce the register event
+    await this.produceEvent('user_register', { email: registerDto.email });
+    console.log('User register event produced.');
 
     return registeredUser;  
   } catch (error) {

@@ -15,10 +15,11 @@ import { WishlistDto } from 'src/dtos/wishlistDto.dto';
 export class AuthController {
   constructor(
     private readonly authService: AuthService, // so that we can use the methods from the AuthService class
-  ) {}
+  ) { }
 
   @Post('register') // hena hatob2a b /auth/register
   async register(@Body() registerDto: RegisterDTO): Promise<User> {
+    console.log('registerDto:', registerDto);
     return await this.authService.register(registerDto);
   }
 
@@ -28,16 +29,16 @@ export class AuthController {
       const { email, verificationCode } = verifyEmailDto;
       const user = await this.authService.verifyEmail(email, verificationCode);
       return { message: 'Email verified successfully. You can now log in.' };
-  } catch (error) {
+    } catch (error) {
       return { message: error.message };
-  }
+    }
   }
 
   @Post('login') // hena hatob2a b /auth/login
   async login(@Body() loginDto: LoginDto): Promise<{ token: string }> { //to be done: change this to jwt token instead of session id
- //   const { token } = await this.authService.login(loginDto);
-  //  return { token };
-  return this.authService.login(loginDto);
+    //   const { token } = await this.authService.login(loginDto);
+    //  return { token };
+    return this.authService.login(loginDto);
   }
 
   // @UseGuards(AccessTokenGuard)
@@ -47,40 +48,40 @@ export class AuthController {
   //   this.authService.logout(req.user['sub']);
   // }
 
-  
+
   @Post('reset-password')
-async resetPassword(
-  @Body() resetPasswordDto: ResetPasswordDto
-): Promise<{ message: string }> {
-  try {
-    // Generate reset code and send email
-    const resetCode = await this.authService.generateResetCode(resetPasswordDto.email);
-    return { message: 'Reset code sent to your email' };
-  } catch (error) {
-    return { message: error.message };
+  async resetPassword(
+    @Body() resetPasswordDto: ResetPasswordDto
+  ): Promise<{ message: string }> {
+    try {
+      // Generate reset code and send email
+      const resetCode = await this.authService.generateResetCode(resetPasswordDto.email);
+      return { message: 'Reset code sent to your email' };
+    } catch (error) {
+      return { message: error.message };
+    }
   }
-}
 
-@Post('reset-password/confirm')
-async resetPasswordConfirm(
-  @Body() resetPasswordDto: ResetPasswordDto
-): Promise<{ message: string }> {
-  try {
-    // Reset password
-    await this.authService.resetPassword(
-      resetPasswordDto.email,
-      resetPasswordDto.resetCode,
-      resetPasswordDto.newPassword
-    );
-    return { message: 'Password reset successfully' };
-  } catch (error) {
-    return { message: error.message };
+  @Post('reset-password/confirm')
+  async resetPasswordConfirm(
+    @Body() resetPasswordDto: ResetPasswordDto
+  ): Promise<{ message: string }> {
+    try {
+      // Reset password
+      await this.authService.resetPassword(
+        resetPasswordDto.email,
+        resetPasswordDto.resetCode,
+        resetPasswordDto.newPassword
+      );
+      return { message: 'Password reset successfully' };
+    } catch (error) {
+      return { message: error.message };
+    }
   }
-}
 
-@Get('google')
+  @Get('google')
   @UseGuards(GoogleAuthGuard)
-  async googleAuth() {}
+  async googleAuth() { }
 
   @Get('google/callback')
   @UseGuards(GoogleAuthGuard)
@@ -103,7 +104,7 @@ async resetPasswordConfirm(
   }
   @Post('rate/:id')
   async rateProduct(@Body() rateProductDto: RateProductDto, @Param
-  ('id') id: string
+    ('id') id: string
   ): Promise<any> {
     return this.authService.rateProduct(rateProductDto, id);
   }
@@ -115,19 +116,19 @@ async resetPasswordConfirm(
     return this.authService.addToWishlist(wishlistDto);
 
   }
-@Get('wishlist')
-async getWishlist(@Body() data:string): Promise<any> {
-  return this.authService.getWishlist(data);
+  @Get('wishlist')
+  async getWishlist(@Body() data: string): Promise<any> {
+    return this.authService.getWishlist(data);
 
-}
-@Delete('wishlist/:id')
-async deleteWishlist(@Param('id') id: string, @Body() data:any): Promise<any> {
-  let {email}= data
-  return this.authService.deleteWishlist(id,email);
-}
+  }
+  @Delete('wishlist/:id')
+  async deleteWishlist(@Param('id') id: string, @Body() data: any): Promise<any> {
+    let { email } = data
+    return this.authService.deleteWishlist(id, email);
+  }
 
 
-  
+
 }
 
 /*
