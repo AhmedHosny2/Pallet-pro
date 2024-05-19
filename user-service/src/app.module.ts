@@ -2,19 +2,24 @@ import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 import { databaseProviders } from './database.providers';
 import { UserSchema } from './schemas/user.schema';
+import { AddressSchema } from './schemas/address.schema';
 import { AuthController } from './controllers/auth.controller';
 import { AuthService } from './services/auth.service';
 import { identityProviders } from './identity.providers';
 import { PassportModule } from '@nestjs/passport';
 import { JwtModule } from '@nestjs/jwt';
 import { env } from 'process';
-import {MailerModule} from '@nestjs-modules/mailer';
+import { MailerModule } from '@nestjs-modules/mailer';
 import { JwtStrategy } from './strategies/jwt.strategy';
 import { LocalStrategy } from './strategies/local.strategy';
 import { CartController } from './controllers/cart.controller';
 import { CartService } from './services/cart.service';
 import { ClientsModule } from '@nestjs/microservices';
 import { Transport } from '@nestjs/microservices';
+import { ProfileController } from './controllers/profile.controller';
+import { ProfileService } from './services/profile.service';
+import { ProductsController } from './controllers/products.controller';
+import { ProductService } from './services/product.service';
 
 @Module({
   imports: [ // the modules that will be imported, we will use MongooseModule to connect to the MongoDB database
@@ -27,11 +32,11 @@ import { Transport } from '@nestjs/microservices';
         uri: env.MONGODB_URI,
       }),
     }),
-    MongooseModule.forFeature([{ name: 'User', schema: UserSchema }]), // the models that will be used in this module
+    MongooseModule.forFeature([{ name: 'User', schema: UserSchema }, { name: 'Address', schema: AddressSchema }]), // the models that will be used in this module
     PassportModule.register({ defaultStrategy: 'jwt' }),
     JwtModule.register({
       secret: 'Darwizzy',
-      signOptions: { expiresIn: '60s' },
+      signOptions: { expiresIn: '60m' },
     }),
     MailerModule.forRoot({
       transport: {
@@ -50,8 +55,8 @@ import { Transport } from '@nestjs/microservices';
     }),
    // JwtModule.register({})
   ],
-  controllers: [AuthController, CartController], // to handle requests and responses, they define the routes and the corresponding HTTP request methods
-  providers: [AuthService, ...identityProviders, ...databaseProviders,JwtModule, LocalStrategy,JwtStrategy, CartService],  // to define components within the application that can be injected into other components
+  controllers: [AuthController, CartController, ProductsController, ProfileController], // to handle requests and responses, they define the routes and the corresponding HTTP request methods
+  providers: [AuthService, ...identityProviders, ...databaseProviders,JwtModule, LocalStrategy,JwtStrategy, CartService, ProfileService, ProductService],  // to define components within the application that can be injected into other components
   exports: [...databaseProviders] // which providers should be available to other modules to import
 })
 export class AppModule {}

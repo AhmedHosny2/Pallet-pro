@@ -1,6 +1,5 @@
 import { Controller, Post, Get, Put, Body, Delete, Req, HttpStatus, UseGuards, Param, Res } from '@nestjs/common';
 import { User } from '../interfaces/user.interface';
-import { AddressService } from '../services/address.service';
 import { AddressDTO } from '../dtos/address.dto';
 import { Address } from '../interfaces/address.interface';
 import { Request } from 'express';
@@ -9,8 +8,8 @@ import { ProductService } from 'src/services/product.service';
 import { WishlistDto } from 'src/dtos/wishlistDto.dto';
 import { JwtAuthGuard } from 'src/strategies/jwt-auth.guard';
 
-@Controller('profile')
-export class ProfileController {
+@Controller('products')
+export class ProductsController {
   constructor(
     private readonly productService: ProductService,
   ) {}

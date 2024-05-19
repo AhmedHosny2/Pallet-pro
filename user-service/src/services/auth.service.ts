@@ -303,6 +303,7 @@ async register(registerDto: RegisterDTO): Promise<User> {
     userId: string,
     email: string,
   ): Promise<{ token: string; refreshToken: string }> {
+    console.log('Generating tokens for user:', userId);
     const [token, refreshToken] = await Promise.all([
       this.jwtService.signAsync(
         {
@@ -310,7 +311,7 @@ async register(registerDto: RegisterDTO): Promise<User> {
           email,
         },
         {
-          secret: 'secret',
+          secret: 'Darwizzy',
           expiresIn: '2000s',
         },
       ),
