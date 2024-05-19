@@ -11,6 +11,15 @@ export interface User extends Document {
     refreshToken?: string;
     verificationCode?: string;
     verified: boolean;
+    wishList: {
+
+        title: string;
+        image: string;
+        price: string;
+        id: string;
+        
+        
+        }[];
 }
 
 /*

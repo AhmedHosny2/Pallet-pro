@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Req, Res, HttpStatus, UseGuards, Param } from '@nestjs/common';
+import { Controller, Get, Post, Body, Req, Res, HttpStatus, UseGuards, Param, Delete } from '@nestjs/common';
 import { RegisterDTO } from '../dtos/register.dto';
 import { User } from '../interfaces/user.interface';
 import { AuthService } from '../services/auth.service';
@@ -9,6 +9,7 @@ import { GoogleAuthGuard } from '../guards/google-auth.guard';
 import { AccessTokenGuard } from '../guards/accessToken.guard';
 import { VerifyEmailDto } from 'src/dtos/verify-email.dto';
 import { RateProductDto } from 'src/dtos/rateProductDto.dto';
+import { WishlistDto } from 'src/dtos/wishlistDto.dto';
 
 @Controller('auth') // kolohom hayob2o b /auth/...
 export class AuthController {
@@ -106,6 +107,27 @@ async resetPasswordConfirm(
   ): Promise<any> {
     return this.authService.rateProduct(rateProductDto, id);
   }
+  // the flow is 
+  // form the frontends once user click add to wishlist  we will get product data then send it to user 
+  // user then add it to the DB 
+  @Post('add-to-wishlist')
+  async addToWishlist(@Body() wishlistDto: WishlistDto, @Param('id') id: string): Promise<any> {
+    return this.authService.addToWishlist(wishlistDto);
+
+  }
+@Get('wishlist')
+async getWishlist(@Body() data:string): Promise<any> {
+  return this.authService.getWishlist(data);
+
+}
+@Delete('wishlist/:id')
+async deleteWishlist(@Param('id') id: string, @Body() data:any): Promise<any> {
+  let {email}= data
+  return this.authService.deleteWishlist(id,email);
+}
+
+
+  
 }
 
 /*

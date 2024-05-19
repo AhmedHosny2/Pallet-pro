@@ -11,5 +11,6 @@ export const UserSchema = new mongoose.Schema({
     resetCode: { type: String, required: false },
     refreshToken: { type: String, required: false },
     verificationCode: { type: String, required: false },
-    verified: { type: Boolean, default: false }
+    verified: { type: Boolean, default: false },
+    wishList: { type: Array, default: [] },
 });

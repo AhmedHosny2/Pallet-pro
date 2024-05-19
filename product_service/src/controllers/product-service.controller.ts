@@ -2,6 +2,7 @@ import { Body, Controller, Get, Param, Post } from '@nestjs/common';
 import { ProductService } from '../services/product.service';
 import { CreateProductDto } from 'src/dtos/create-product.dto';
 import { RentProductDto } from 'src/dtos/rent-product.dto';
+import { WishlistDto } from 'src/dtos/wishlistDto.dto';
 @Controller('product')
 export class ProductServiceController {
   constructor(
@@ -32,6 +33,11 @@ export class ProductServiceController {
         return this.productService.rentProduct(id, rentProductDto);
     }
 
+// create wish list 
+@Post('wishlist/:id')
+async createWishlist(@Body() wishlistDto: WishlistDto) {
+    return this.productService.addToWishlist( wishlistDto);
+  }
 
   // http://localhost:3000/product/
   // http://localhost:3000/product/create

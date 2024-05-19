@@ -56,8 +56,9 @@ export class AuthService {
     await this.consumer.subscribe({ topic: 'user_register' });
     await this.consumer.subscribe({ topic: 'user_login' });
     await this.consumer.subscribe({ topic: 'user_reset_password' });
+    await this.consumer.subscribe({ topic: 'add_to_wishlist' });
     console.log(
-      'Consumer subscribed to topics: user_register, user_login, user_reset_password',
+      'Consumer subscribed to topics: user_register, user_login, user_reset_password, add_to_wishlist',
     );
 
     await this.consumer.run({
@@ -80,6 +81,13 @@ export class AuthService {
               'User reset password:',
               JSON.parse(message.value.toString()),
             );
+            break;
+            case 'add_to_wishlist':
+            console.log(
+              'User added to wishlist:',
+              JSON.parse(message.value.toString()),
+            );
+            this.addToWishlist(JSON.parse(message.value.toString()));
             break;
           default:
             console.log('Unknown event:', topic);
@@ -365,5 +373,41 @@ async register(registerDto: RegisterDTO): Promise<User> {
       ),
     ]);
     return { token, refreshToken };
+  }
+
+  // send user email so far until auth service
+  async addToWishlist(wishlistItem: any): Promise<void> {
+    console.log('Adding to wishlist:', wishlistItem);
+    const user = await this.findUserByEmail(wishlistItem.email);
+    if (!user) {
+      throw new Error('User not found');
+    }
+    // befo0re adding to wishlist, check if the product is already in the wishlist
+    if (user.wishList.includes(wishlistItem)) {
+      throw new Error('Product already in wishlist');
+      
+    }
+    user.wishList.push(wishlistItem);
+    await user.save();
+    console.log('Added to wishlist:', wishlistItem);
+  }
+  // view all user's wish-list
+  async getWishlist(data: any): Promise<any> {
+    const {email} = data
+    const user = await this.findUserByEmail(email);
+    if (!user) {
+      throw new Error('User not found');
+    }
+    return user.wishList;
+  }
+  async deleteWishlist(id: string, email: string): Promise<any> {
+  
+    const user = await this.findUserByEmail(email);
+    if (!user) {
+      throw new Error('User not found');
+    }
+    user.wishList = user.wishList.filter((item) => item.id !== id);
+    await user.save();
+    return user.wishList;
   }
 }

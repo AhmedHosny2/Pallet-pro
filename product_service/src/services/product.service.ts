@@ -10,7 +10,7 @@ import e from 'express';
 import { ViewAllProductsDto } from '../dtos/view-all-products.dto';
 import { RentProductDto } from 'src/dtos/rent-product.dto';
 import { RateProductDto } from 'src/dtos/rateProductDto.dto';
-
+import { WishlistDto } from 'src/dtos/wishlistDto.dto';
 @Injectable()
 export class ProductService {
   private kafka: Kafka;
@@ -157,5 +157,12 @@ export class ProductService {
     await product.save();
     console.log('Product rented:', product);
     return product;
+  }
+  // product will produce an event to the kafka broker to add a product to user wishlist over topic 
+  async addToWishlist(wishlistDto: WishlistDto) {
+    console.log('Adding to wishlist');
+    await this.produceEvent('add_to_wishlist', wishlistDto);
+    console.log('Added to wishlist:', wishlistDto);
+    return wishlistDto;
   }
 }
