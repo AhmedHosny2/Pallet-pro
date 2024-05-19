@@ -1,9 +1,9 @@
-import { Controller, Post, Get, Put, Body, Delete, Req, HttpStatus } from '@nestjs/common';
+import { Controller, Post, Get, Put, Body, Delete, Req, HttpStatus, UseGuards, Request } from '@nestjs/common';
 import { User } from '../interfaces/user.interface';
 import { AddressService } from '../services/address.service';
 import { AddressDTO } from '../dtos/address.dto';
 import { Address } from '../interfaces/address.interface';
-import { Request } from 'express';
+import { JwtAuthGuard } from 'src/strategies/jwt-auth.guard';
 
 @Controller('profile')
 export class ProfileController {
@@ -11,41 +11,40 @@ export class ProfileController {
     private readonly addressSevice: AddressService,
   ) {}
 
-  @Get('hello')
-  getHello(): any {
-    console.log('hello from profile');
-    return { message: 'Hello from profile microservice' };
-  }
-
   @Get('allAddresses')
-  async getAllAddresses(@Req() req: Request): Promise<any> {
-    const user_id = "Token"; // to be done: get token from request header
+  @UseGuards(JwtAuthGuard)
+  async getAllAddresses(@Request() req): Promise<any> {
+    const userId = req.user?.userId;
     // return this.addressSevice.getAllAddresses(user_id);
     return "All Addresses";
   }
 
   @Put('updateAddress')
-  async updateAddress(@Body() addressDTO: AddressDTO): Promise<any> { //email confirmation?
-    const user_id = "Token"; // to be done: get token from request header
-    return this.addressSevice.updateAddress(user_id, addressDTO.id, addressDTO);
+  @UseGuards(JwtAuthGuard)
+  async updateAddress(@Request() req, @Body() addressDTO: AddressDTO): Promise<any> { //email confirmation?
+    const userId = req.user?.userId;
+    return this.addressSevice.updateAddress(userId, addressDTO.id, addressDTO);
   }
 
   @Delete('deleteAddress')
-  async deleteAddress(@Body() addressDTO: AddressDTO): Promise<any> {
-    const user_id = "Token"; // to be done: get token from request header
-    return this.addressSevice.deleteAddress(user_id, addressDTO.id);
+  @UseGuards(JwtAuthGuard)
+  async deleteAddress(@Request() req, @Body() addressDTO: AddressDTO): Promise<any> {
+    const userId = req.user?.userId;
+    return this.addressSevice.deleteAddress(userId, addressDTO.id);
   }
 
   @Post('createAddress')
-  async createAddress(@Body() addressDTO: AddressDTO): Promise<any> {
-    const user = "Token"; // to be done: get token from request header
-    return this.addressSevice.createAddress(user, addressDTO);
+  @UseGuards(JwtAuthGuard)
+  async createAddress(@Request() req, @Body() addressDTO: AddressDTO): Promise<any> {
+    const userId = req.user?.userId;
+    return this.addressSevice.createAddress(userId, addressDTO);
   }
 
   @Get('getUserAddress')
-  async getUserAddress(): Promise<any> {
-    const user_id = "Token"; // to be done: get token from request header
-    return this.addressSevice.getSelectedAddress(user_id);
+  @UseGuards(JwtAuthGuard)
+  async getUserAddress(@Request() req): Promise<any> {
+    const userId = req.user?.userId;
+    return this.addressSevice.getSelectedAddress(userId);
   }
 }
 

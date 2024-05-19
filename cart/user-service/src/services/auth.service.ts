@@ -159,9 +159,9 @@ async register(registerDto: RegisterDTO): Promise<User> {
     const registeredUser = await this.registerUser(userDto, verificationCode); // Pass verification code
     await this.sendVerificationEmail(registerDto.email, verificationCode); // Pass verification code
 
-    // produce the register event
-    await this.produceEvent('user_register', { email: registerDto.email });
-    console.log('User register event produced.');
+      // produce the register event
+      await this.produceEvent('user_register', { email: registerDto.email });
+      console.log('User register event produced.');
 
     return registeredUser;  
   } catch (error) {
@@ -169,6 +169,19 @@ async register(registerDto: RegisterDTO): Promise<User> {
     throw error;
   }
 }
+
+// user rate product
+  // it will connect with product service using kafak
+  // it will send the rating and the product id
+  // it will also send the user id
+  async rateProduct(rateProductDto: RateProductDto, id: string): Promise<void> {
+    // I need to send it ot client_id =>  product_service  group id => product_service_id
+
+    await this.producer.send({
+      topic: 'rate_product',
+      messages: [{ value: JSON.stringify({ id, rateProductDto }) }],
+    });
+  }
 
   async resetPassword(email: string, resetCode: string, newPassword: string): Promise<void> {
     const user = await this.findUserByEmail(email);

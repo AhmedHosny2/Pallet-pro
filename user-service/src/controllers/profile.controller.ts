@@ -1,7 +1,8 @@
-import { Controller, Post, Get, Put, Body, Delete, Res, HttpStatus } from '@nestjs/common';
+import { Controller, Post, Get, Put, Body, Delete, Res, HttpStatus, UseGuards, Request } from '@nestjs/common';
 import { User } from '../interfaces/user.interface';
 import { ProfileService } from '../services/profile.service';
 import { UpdateProfileDTO } from '../dtos/updateProfile.dto';
+import { JwtAuthGuard } from 'src/strategies/jwt-auth.guard';
 
 @Controller('profile')
 export class ProfileController {
@@ -9,28 +10,25 @@ export class ProfileController {
     private readonly profileService: ProfileService,
   ) {}
 
-  @Get('hello')
-  getHello(): any {
-    console.log('hello from profile');
-    return { message: 'Hello from profile microservice' };
-  }
-
   @Get('profile')
-  async getProfile(): Promise<User> {
-    const token = "Token"; // to be done: get token from request header
-    return this.profileService.getProfile(token);
+  @UseGuards(JwtAuthGuard)
+  async getProfile(@Request() req): Promise<User> {
+    const userId = req.user?.userId;
+    return this.profileService.getProfile(userId);
   }
 
   @Put('profile')
-  async updateProfile(@Body() updateProfileDTO: UpdateProfileDTO): Promise<User> { //email confirmation?
-    const token = "Token"; // to be done: get token from request header
-    return this.profileService.updateProfile(token, updateProfileDTO);
+  @UseGuards(JwtAuthGuard)
+  async updateProfile(@Request() req, @Body() updateProfileDTO: UpdateProfileDTO): Promise<User> { //email confirmation?
+    const userId = req.user?.userId;
+    return this.profileService.updateProfile(userId, updateProfileDTO);
   }
 
   @Delete('profile')
-  async deleteProfile(): Promise<User> {
-    const token = "Token"; // to be done: get token from request header
-    return this.profileService.deleteProfile(token);
+  @UseGuards(JwtAuthGuard)
+  async deleteProfile(@Request() req): Promise<User> {
+    const userId = req.user?.userId;
+    return this.profileService.deleteProfile(userId);
   }
   
 }
