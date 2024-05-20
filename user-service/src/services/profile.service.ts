@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { HttpException, Injectable } from '@nestjs/common';
 import { InjectModel } from "@nestjs/mongoose";
 import { Model } from "mongoose";
 import { User } from '../interfaces/user.interface';
@@ -9,6 +9,11 @@ import e from 'express';
 import { JwtService } from '@nestjs/jwt';
 import { UpdateProfileDTO } from '../dtos/updateProfile.dto';
 import { AddressDTO } from '../dtos/address.dto';
+import { ConfirmUpdatePasswordDTO } from '../dtos/confirmUpdatePassword.dto';
+import { MailerService } from '@nestjs-modules/mailer';
+import { hash } from 'bcrypt';
+import { AuthService } from './auth.service';
+import { auth } from 'google-auth-library';
 
 @Injectable()
 
@@ -17,10 +22,14 @@ export class ProfileService {
   private kafka: Kafka;
   private producer;
   private consumer;
+  private updatePasswordsCodes = new Map();
+  private deleteAccountsCodes = new Map();
   constructor(
     private jwtService: JwtService,
     @InjectModel('User') private readonly userModel: Model<User>,// to use the user schema, we need to inject the user model
-    @InjectModel('Address') private readonly addressModel: Model<Address>
+    @InjectModel('Address') private readonly addressModel: Model<Address>,
+    private readonly mailerService: MailerService,
+    private readonly authService: AuthService,
   ) {
     this.kafka = new Kafka({
       clientId: 'user-service',
@@ -41,7 +50,6 @@ export class ProfileService {
   }
 
   async startConsumer() {
-
     await this.consumer.subscribe({ topic: 'get_profile' });
     await this.consumer.subscribe({ topic: 'pre_update_profile' });
     await this.consumer.subscribe({ topic: 'post_update_profile' });
@@ -52,6 +60,8 @@ export class ProfileService {
     await this.consumer.subscribe({ topic: 'create_address' });
     await this.consumer.subscribe({ topic: 'update_address' });
     await this.consumer.subscribe({ topic: 'delete_address' });
+    await this.consumer.subscribe({ topic: 'pre_update_password' });
+    await this.consumer.subscribe({ topic: 'post_update_password' });
 
     await this.consumer.run({
       eachMessage: async ({ topic, partition, message }) => {
@@ -89,6 +99,12 @@ export class ProfileService {
                 break;
             case 'delete_address':
                 console.log('Delete Address:', JSON.parse(message.value.toString()));
+                break; 
+            case 'pre_update_password':
+                console.log('Pre Update Password:', JSON.parse(message.value.toString()));
+                break;
+            case 'post_update_password':
+                console.log('Post Update Password:', JSON.parse(message.value.toString()));
                 break;
             default:
                 console.log('Unknown event:', topic);
@@ -102,44 +118,126 @@ export class ProfileService {
   }
 
   async getProfile(userId: string): Promise<User> {
-    if (!userId) { //Authentication
-      throw new Error('Invalid token');
-    }
     const user = await this.userModel.findById(userId);
+    user.password = undefined;
+    user.verificationCode = undefined;
     await this.produceEvent('get_profile', user);
+    return user;
+  }
+  
+  async updatePassword(userId: string): Promise<String> {
+    const user = await this.userModel.findById(userId);
+    const email = user.email;
+    const code = Math.floor(100000 + Math.random() * 900000);
+    const content = `<p>Your password update verification code is: ${code}</p>`;
+    await this.mailerService.sendMail({
+      to: email,
+      subject: "Password Update Verification Code",
+      html: content,
+    });
+    this.updatePasswordsCodes.set(userId, code);
+    setTimeout(() => {
+      this.updatePasswordsCodes.delete(userId);
+    }
+    , 300000); //5 minutes
+    await this.produceEvent('pre_update_password', userId);
+    return "Code sent to email";
+  }
+  
+  async confirmUpdatePassword(userId: string, updatePasswordDTO: ConfirmUpdatePasswordDTO): Promise<User> {
+    console.log('Codes:', this.updatePasswordsCodes);
+    if (!this.updatePasswordsCodes.has(userId)) {
+      throw new HttpException('No code sent/Code Expired', 400);
+    }
+    if (this.updatePasswordsCodes.get(userId) !== updatePasswordDTO.code) {
+      throw new HttpException('Invalid code', 400);
+    }
+    this.updatePasswordsCodes.delete(userId);
+    const hashedPassword = await hash(updatePasswordDTO.password, 10);;
+    const user = await this.userModel
+      .findByIdAndUpdate(userId, { password: hashedPassword });
+    await this.produceEvent('post_update_password', user);
     return user;
   }
 
   async updateProfile(userId: string, updateProfileDTO: UpdateProfileDTO): Promise<User> {
-    // Checking for the address id
+    await this.produceEvent('pre_update_profile', updateProfileDTO);
     const address = await this.addressModel.findById(updateProfileDTO.selected_address_id);
-    if (!address) {
-      throw new Error('Invalid address');
+    if (address && userId !== address.user_id) {
+      throw new HttpException('Invalid address', 400);
     }
-    if (!userId) { //Authentication
-      throw new Error('Invalid token');
-    }
-    if (userId !== address.user_id) {
-      throw new Error('Invalid address');
-    }
+    let user = await this.userModel.findById(userId);
     if (updateProfileDTO.email) {
-      const user = await this.userModel.findOne({ email: updateProfileDTO.email });
-      if (user) {
-        throw new Error('Email already registered for a different user');
+      const userWithEmail = await this.userModel.findOne({ email: updateProfileDTO.email });
+      if (userWithEmail) {
+        throw new HttpException('Email already in use', 400);
+      }
+      else {
+        const email = updateProfileDTO.email;
+        const code = Math.floor(100000 + Math.random() * 900000);
+        const content = `<p>Your email update verification code is: ${code}</p>`;
+        await this.mailerService.sendMail({
+          to: email,
+          subject: "Email Update Verification Code",
+          html: content,
+        });
+        user = await this.userModel.findByIdAndUpdate(userId, {
+          verificationCode: code,
+          verified: false,
+          email: email,
+          updated_at: new Date(),
+          selected_address_id: updateProfileDTO.selected_address_id,
+          first_name: updateProfileDTO.first_name,
+          last_name: updateProfileDTO.last_name
+        });
+        user.password = undefined;
+        user.verificationCode = undefined;
+
       }
     }
-    await this.produceEvent('pre_update_profile', updateProfileDTO);
-    const user = await this.userModel.findByIdAndUpdate(userId, updateProfileDTO);
     await this.produceEvent('post_update_profile', user);
     return user;
   }
 
-  async deleteProfile(userId: string): Promise<User> {
-    if (!userId) { //Authentication
-      throw new Error('Invalid token');
-    }
+  async deleteProfile(userId: string): Promise<String> {
     await this.produceEvent('pre_delete_profile', userId); //Send email for confirmation
+    const user = await this.userModel.findById(userId);
+    const email = user.email;
+    const code = Math.floor(100000 + Math.random() * 900000);
+    const content = `<p>Your account deletion verification code is: ${code}</p>`;
+    await this.mailerService.sendMail({
+      to: email,
+      subject: "Account Deletion Verification Code",
+      html: content,
+    });
+    this.deleteAccountsCodes.set(userId, code);
+    setTimeout(() => {
+      this.deleteAccountsCodes.delete(userId);
+    }
+    , 300000); //5 minutes
+    return "Code sent to email";
+  }
+
+  async confirmDeleteProfile(userId: string, code: number): Promise<User> {
+    if (!this.deleteAccountsCodes.has(userId)) {
+      throw new HttpException('No code sent/Code Expired', 400);
+    }
+    if (this.deleteAccountsCodes.get(userId) !== code) {
+      throw new HttpException('Invalid code', 400);
+    }
+    this.deleteAccountsCodes.delete(userId);
     const user = await this.userModel.findByIdAndDelete(userId);
+    // Remove all addresses
+    await this.addressModel.deleteMany({ user_id: userId });
+    // Remove all carts
+    // To be implemented
+    // Remove all orders
+    // To be implemented
+    // Remove all reviews
+    // To be implemented
+    // Remove all payments
+    // To be implemented
+
     await this.produceEvent('post_delete_profile', user);
     return user;
   }

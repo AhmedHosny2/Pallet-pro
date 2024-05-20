@@ -4,6 +4,8 @@ import { UpdateProfileDTO } from '../dtos/updateProfile.dto';
 import { JwtAuthGuard } from 'src/strategies/jwt-auth.guard';
 import { ProfileService } from '../services/profile.service';
 import { AddressDTO } from 'src/dtos/address.dto';
+import { ConfirmUpdatePasswordDTO } from 'src/dtos/confirmUpdatePassword.dto';
+import { ConfirmDeleteProfileDTO } from 'src/dtos/confirmDeleteProfile.dto';
 
 @Controller('profile')
 export class ProfileController {
@@ -25,11 +27,32 @@ export class ProfileController {
     return this.profileService.updateProfile(userId, updateProfileDTO);
   }
 
-  @Delete('')
+  @Put('updatePassword')
   @UseGuards(JwtAuthGuard)
-  async deleteProfile(@Request() req): Promise<User> {
+  async updatePassword(@Request() req): Promise<String> {
+    const userId = req.user?.userId;
+    return this.profileService.updatePassword(userId);
+  }
+
+  @Put('confirmUpdatePassword')
+  @UseGuards(JwtAuthGuard)
+  async confirmUpdatePassword(@Request() req, @Body() confirmUpdatePassword : ConfirmUpdatePasswordDTO): Promise<User> {
+    const userId = req.user?.userId;
+    return this.profileService.confirmUpdatePassword(userId, confirmUpdatePassword);
+  }
+
+  @Put('delete')
+  @UseGuards(JwtAuthGuard)
+  async deleteProfile(@Request() req): Promise<String> {
     const userId = req.user?.userId;
     return this.profileService.deleteProfile(userId);
+  }
+
+  @Delete('confirmDelete')
+  @UseGuards(JwtAuthGuard)
+  async confirmDeleteProfile(@Request() req, @Body() confirmDeleteProfileDTO: ConfirmDeleteProfileDTO): Promise<User> {
+    const userId = req.user?.userId;
+    return this.profileService.confirmDeleteProfile(userId, confirmDeleteProfileDTO.code);
   }
 
   @Get('allAddresses')
