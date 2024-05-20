@@ -1,4 +1,5 @@
-import {IsString, IsEmail, IsNotEmpty, MinLength, MaxLength} from 'class-validator';
+import { Options, Post } from '@nestjs/common';
+import {IsString, IsEmail, IsNotEmpty, MinLength, MaxLength, IsPhoneNumber, isPostalCode, ValidatorConstraint, ValidatorConstraintInterface, ValidationArguments} from 'class-validator';
 
 export class RegisterDTO {
     @IsString()
@@ -24,8 +25,35 @@ export class RegisterDTO {
     @MaxLength(20)
     readonly last_name: string;
 
-    refreshToken?: string;
+    @IsString()
+    @IsNotEmpty()
+    address_name: string;
 
+    @IsString()
+    @IsNotEmpty()
+    country: string;
+
+    @IsString()
+    @IsNotEmpty()
+    city: string;
+
+    @IsString()
+    @IsNotEmpty()
+    address_line_1: string;
+
+    @IsString()
+    address_line_2: string;
+
+    @IsString()
+    @IsNotEmpty()
+    zip_code: string;
+
+    @IsString()
+    @IsNotEmpty()
+    @IsPhoneNumber()
+    phone_number: string;
+
+    refreshToken?: string;
 
     toString() {
         return JSON.stringify({

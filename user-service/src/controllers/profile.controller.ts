@@ -50,7 +50,7 @@ export class ProfileController {
 
   @Delete('confirmDelete')
   @UseGuards(JwtAuthGuard)
-  async confirmDeleteProfile(@Request() req, @Body() confirmDeleteProfileDTO: ConfirmDeleteProfileDTO): Promise<User> {
+  async confirmDeleteProfile(@Request() req, @Body() confirmDeleteProfileDTO: ConfirmDeleteProfileDTO): Promise<String> {
     const userId = req.user?.userId;
     return this.profileService.confirmDeleteProfile(userId, confirmDeleteProfileDTO.code);
   }
@@ -67,7 +67,7 @@ export class ProfileController {
   @UseGuards(JwtAuthGuard)
   async updateAddress(@Request() req, @Body() addressDTO: AddressDTO): Promise<any> { //email confirmation?
     const userId = req.user?.userId;
-    return this.profileService.updateAddress(userId, addressDTO.id, addressDTO);
+    return this.profileService.updateAddress(userId, addressDTO);
   }
 
   @Delete('deleteAddress')

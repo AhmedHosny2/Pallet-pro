@@ -14,6 +14,7 @@ import { ResetPasswordDto } from '../dtos/reset-password.dto';
 import { OAuth2Client } from 'google-auth-library';
 import { RateProductDto } from 'src/dtos/rateProductDto.dto';
 import { VerifyEmailDto } from 'src/dtos/verify-email.dto';
+import { ProfileService } from './profile.service';
 
 
 @Injectable()
@@ -26,6 +27,7 @@ export class AuthService {
     private jwtService: JwtService,
     private readonly mailerService: MailerService,
     @InjectModel('User') private readonly userModel: Model<User>, // to use the user schema, we need to inject the user model
+    private profileService: ProfileService,
   ) {
     this.googleOAuthClient = new OAuth2Client({
       clientId:
@@ -148,6 +150,9 @@ export class AuthService {
 
 async register(registerDto: RegisterDTO): Promise<User> {
   try {
+    if (!registerDto.email || !registerDto.password || !registerDto.first_name || !registerDto.last_name || !registerDto.address_name || !registerDto.country || !registerDto.city || !registerDto.address_line_1 || !registerDto.zip_code) {
+      throw new Error('Missing required fields');
+    }
     if (await this.findUserByEmail(registerDto.email)) {
       throw new Error('User already exists');
     }
@@ -245,9 +250,29 @@ async register(registerDto: RegisterDTO): Promise<User> {
 
     async registerUser(registerDTO: RegisterDTO, verificationCode: string): Promise<User> {
       console.log('RegisterUser method called with email:', registerDTO.email)
-      const user = new this.userModel({ ...registerDTO, verificationCode });
+      const user = await this.userModel.create({
+        email: registerDTO.email,
+        password: registerDTO.password,
+        first_name: registerDTO.first_name,
+        last_name: registerDTO.last_name,
+        role: 'user',
+        verificationCode: verificationCode,
+        created_at: new Date(),
+        verified: false,
+      });
+      const address = await this.profileService.createAddress(user.id, {
+        name: registerDTO.address_name,
+        country: registerDTO.country,
+        city: registerDTO.city,
+        address_line_1: registerDTO.address_line_1,
+        address_line_2: registerDTO.address_line_2,
+        zip_code: registerDTO.zip_code,
+        phone_number: registerDTO.phone_number,
+        id: null
+      });
+      await this.userModel.updateOne({ email: registerDTO.email }, { selected_address_id: address.id });
       // await this.sendVerificationEmail(registerDTO.email, verificationCode);
-      return user.save();
+      return user;
     }
   
     async findUserByEmail(email: string): Promise<User | null> { // this method takes an email as input and returns a User object or null if not found.

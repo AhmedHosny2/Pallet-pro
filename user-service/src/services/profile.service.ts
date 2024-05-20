@@ -29,7 +29,6 @@ export class ProfileService {
     @InjectModel('User') private readonly userModel: Model<User>,// to use the user schema, we need to inject the user model
     @InjectModel('Address') private readonly addressModel: Model<Address>,
     private readonly mailerService: MailerService,
-    private readonly authService: AuthService,
   ) {
     this.kafka = new Kafka({
       clientId: 'user-service',
@@ -162,9 +161,14 @@ export class ProfileService {
 
   async updateProfile(userId: string, updateProfileDTO: UpdateProfileDTO): Promise<User> {
     await this.produceEvent('pre_update_profile', updateProfileDTO);
-    const address = await this.addressModel.findById(updateProfileDTO.selected_address_id);
-    if (address && userId !== address.user_id) {
-      throw new HttpException('Invalid address', 400);
+    if (updateProfileDTO.selected_address_id) {
+      const address = await this.addressModel.findById(updateProfileDTO.selected_address_id);
+      console.log('Address:', address);
+      console.log('User:', userId);
+      console.log('Address User:', address.user_id.toString());
+      if (address && userId as String !== address.user_id.toString()) {
+        throw new HttpException('Invalid address', 400);
+      }
     }
     let user = await this.userModel.findById(userId);
     if (updateProfileDTO.email) {
@@ -218,7 +222,7 @@ export class ProfileService {
     return "Code sent to email";
   }
 
-  async confirmDeleteProfile(userId: string, code: number): Promise<User> {
+  async confirmDeleteProfile(userId: string, code: number): Promise<String> {
     if (!this.deleteAccountsCodes.has(userId)) {
       throw new HttpException('No code sent/Code Expired', 400);
     }
@@ -239,7 +243,7 @@ export class ProfileService {
     // To be implemented
 
     await this.produceEvent('post_delete_profile', user);
-    return user;
+    return "Account deleted successfully";
   }
 
   async getAllAddresses(userId: string) {
@@ -254,20 +258,44 @@ export class ProfileService {
   }
 
   async createAddress(userId: string, address: AddressDTO) {
-    const newAddress = new this.addressModel({ user_id: userId, ...address });
-    await newAddress.save();
+    if (!address.name || !address.country || !address.city || !address.address_line_1 || !address.zip_code || !address.phone_number) {
+      throw new HttpException('Missing fields', 400);
+    }
+    const newAddress = await this.addressModel.create(
+      { user_id: userId, 
+        name: address.name,
+        country: address.country,
+        city: address.city,
+        address_line_1: address.address_line_1,
+        address_line_2: address.address_line_2,
+        phone_number: address.phone_number,
+        zip_code: address.zip_code,
+        created_at: new Date(),
+      });
     await this.produceEvent('create_address', newAddress);
     return newAddress;
   }
 
-  async updateAddress(userId: string, addressId: string, address: AddressDTO) {
-    address.updated_at = new Date();
-    const updatedAddress = await this.addressModel.findOneAndUpdate({ user_id: userId, _id: addressId }, address);
+  async updateAddress(userId: string, address: AddressDTO) {
+    const updatedAddress = await this.addressModel.findOneAndUpdate({ user_id: userId, id: address.id }, {
+      name: address.name,
+      country: address.country,
+      city: address.city,
+      address_line_1: address.address_line_1,
+      address_line_2: address.address_line_2,
+      phone_number: address.phone_number,
+      zip_code: address.zip_code,
+      updated_at: new Date(),
+    });
     await this.produceEvent('update_address', updatedAddress);
     return updatedAddress;
   }
 
   async deleteAddress(userId: string, addressId: string) {
+    const user = await this.userModel.findById(userId);
+    if (user.selected_address_id === addressId) {
+      throw new HttpException('Cannot delete selected address', 400);
+    }
     const deletedAddress = await this.addressModel.findOneAndDelete({ user_id: userId, _id: addressId });
     await this.produceEvent('delete_address', deletedAddress);
     return deletedAddress;

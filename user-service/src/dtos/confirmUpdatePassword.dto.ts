@@ -1,4 +1,4 @@
-import {IsString, IsNotEmpty} from 'class-validator';
+import {IsString, IsNotEmpty, MinLength, MaxLength} from 'class-validator';
 
 export class ConfirmUpdatePasswordDTO {
     @IsString()
@@ -7,6 +7,8 @@ export class ConfirmUpdatePasswordDTO {
 
     @IsString()
     @IsNotEmpty()
+    @MinLength(6)
+    @MaxLength(20)
     readonly password: string;
 
     toString() {
