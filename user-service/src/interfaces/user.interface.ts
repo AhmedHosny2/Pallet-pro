@@ -12,15 +12,16 @@ export interface User extends Document {
     verificationCode?: string;
     verified: boolean;
     selected_address_id: string;
-    wishList: {
-
-        title: string;
+    wishLists: {
+        name: string;
         image: string;
-        price: string;
-        id: string;
-        
-        
+        price: number;
+        products: {
+            id: string;
+            price: number;
+            amount: number;
         }[];
+     }[];
 }
 
 /*

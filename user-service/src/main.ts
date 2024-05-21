@@ -9,6 +9,7 @@ async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   const authService = app.get(AuthService);
   await authService.startConsumer();
-  await app.listen(3000);
+  app.enableCors();
+  await app.listen(5000);
 }
 bootstrap();

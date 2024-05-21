@@ -1,10 +1,15 @@
-import { Injectable } from '@nestjs/common';
+import { HttpException, Injectable } from '@nestjs/common';
 import { InjectModel } from "@nestjs/mongoose";
 import { Model } from "mongoose";
 import { User } from '../interfaces/user.interface';
 import { Kafka } from 'kafkajs';
 import { JwtService } from '@nestjs/jwt';
 import { RateProductDto } from 'src/dtos/rateProductDto.dto';
+import { CreateWishlistDTO } from 'src/dtos/wishlistCreate.dto';
+import { AddToWishlistDTO } from 'src/dtos/wishListAdd';
+import { RemoveFromWishlistDTO } from 'src/dtos/wishlistRemove.dto';
+import { DeleteWishlistDTO } from 'src/dtos/wishlistDelete';
+import { GetWishlistDTO } from 'src/dtos/wishlistGet';
 
 @Injectable()
 export class ProductService {
@@ -54,7 +59,7 @@ export class ProductService {
       throw error;
     }
 
-// user rate product
+  // user rate product 
   // it will connect with product service using kafak
   // it will send the rating and the product id
   // it will also send the user id
@@ -67,40 +72,95 @@ export class ProductService {
     });
   }
 
-  // send user email so far until auth service
-  async addToWishlist(wishlistItem: any): Promise<void> {
-    console.log('Adding to wishlist:', wishlistItem);
-    const user = await this.userModel.findOne({email: wishlistItem.email});
-    if (!user) {
-      throw new Error('User not found');
+  async createWishlist(userId: string, createWishlistDTO: CreateWishlistDTO): Promise<string> {
+    const user = await this.userModel.findById(userId);
+    if (!user.wishLists) {
+      user.wishLists = [];
     }
-    // befo0re adding to wishlist, check if the product is already in the wishlist
-    if (user.wishList.includes(wishlistItem)) {
-      throw new Error('Product already in wishlist');
-      
+    if (user.wishLists.find((item) => item.name === createWishlistDTO.name)) {
+      throw new HttpException('Wishlist already exists', 400);
     }
-    user.wishList.push(wishlistItem);
+    user.wishLists.push({
+      name: createWishlistDTO.name,
+      image: createWishlistDTO.image,
+      price: 0,
+      products: [],
+    });
     await user.save();
-    console.log('Added to wishlist:', wishlistItem);
+    return 'Wishlist created';
   }
-  // view all user's wish-list
-  async getWishlist(data: any): Promise<any> {
-    const {email} = data
-    const user = await this.userModel.findOne({email});
-    if (!user) {
-      throw new Error('User not found');
+
+  async addToWishlist(userId: string, addToWishlistDTO: AddToWishlistDTO ): Promise<any> {
+    const user = await this.userModel.findById(userId);
+    if (!user.wishLists){
+      user.wishLists = [];
     }
-    return user.wishList;
+    const wishlist = user.wishLists.find((item) => item.name === addToWishlistDTO.wishListName);
+    if (!wishlist) {
+      throw new HttpException('Wishlist not found', 400);
+    }
+    if (!wishlist.products) {
+      wishlist.products = [];
+    }
+    const product = wishlist.products.find((item) => item.id === addToWishlistDTO.productId);
+    if (product) {
+      product.amount = addToWishlistDTO.amount;
+      product.price = addToWishlistDTO.price;
+    } else {
+      wishlist.products.push({
+        id: addToWishlistDTO.productId,
+        price: addToWishlistDTO.price,
+        amount: addToWishlistDTO.amount,
+      });
+    }
+    wishlist.price = wishlist.products.reduce((acc, item) => acc + item.price, 0);
+    await user.save();
+    return {message: 'Product added to wishlist', wishlist: wishlist};
   }
-  async deleteWishlist(id: string, email: string): Promise<any> {
+
+  async removeFromWishlist(userId: string, removeFromWishlistDTO: RemoveFromWishlistDTO): Promise<any> {
+    const user = await this.userModel.findById(userId);
+    if (!user.wishLists) {
+      user.wishLists = [];
+    }
+    const wishlist = user.wishLists.find((item) => item.name === removeFromWishlistDTO.wishListName);
+    if (!wishlist) {
+      throw new HttpException('Wishlist not found', 400);
+    }
+    const product = wishlist.products.find((item) => item.id === removeFromWishlistDTO.productId);
+    if (!product) {
+      throw new HttpException('Product not found', 400);
+    }
+    wishlist.products = wishlist.products.filter((item) => item.id !== removeFromWishlistDTO.productId);
+    wishlist.price = wishlist.products.reduce((acc, item) => acc + item.price, 0);
+    await user.save();
+    return {message: 'Product removed from wishlist', wishlist: wishlist};
+  }
+
+  async getWishlist(userId: string, getWishlistDTO: GetWishlistDTO): Promise<any> {
+    const user = await this.userModel.findById(userId);
+    if (!user.wishLists){
+      user.wishLists = [];
+    }
+    const wishlist = user.wishLists.find((item) => item.name === getWishlistDTO.wishListName);
+  }
   
-    const user = await this.userModel.findOne({email});
-    if (!user) {
-      throw new Error('User not found');
+  async deleteWishlist(userId: string, deleteWishlistDTO: DeleteWishlistDTO): Promise<any> {
+    const user = await this.userModel.findById(userId);
+    if (!user.wishLists) {
+      user.wishLists = [];
     }
-    user.wishList = user.wishList.filter((item) => item.id !== id);
+    user.wishLists = user.wishLists.filter((item) => item.name !== deleteWishlistDTO.wishListName);
     await user.save();
-    return user.wishList;
+    return user.wishLists;
+  }
+
+  async getAllWishlists(userId: string): Promise<any> {
+    const user = await this.userModel.findById(userId);
+    if (!user.wishLists) {
+      user.wishLists = [];
+    }
+    return user.wishLists;
   }
 
 }

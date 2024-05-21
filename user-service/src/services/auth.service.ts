@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { HttpException, Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { LoginDto } from '../dtos/login.dto';
@@ -107,11 +107,12 @@ export class AuthService {
     const { email, password } = loginDto;
     const user = await this.findUserByEmail(email);
     if (!user) {
-      throw new Error('User not found');
+      throw new HttpException('User not found', 400);
     }
 
     if(!user.verified){
-      throw new Error('User not verified');
+      await this.sendVerificationEmail(user.email, user.verificationCode);
+      throw new HttpException('User not verified', 401);
     }
 
     // print all the data from the user
@@ -224,6 +225,10 @@ async register(registerDto: RegisterDTO): Promise<User> {
         throw new Error('User not found');
     }
 
+    if (user.verified) {
+      return user;
+    }
+
     // Log the verification codes for debugging
     console.log('User Verification Code:', user.verificationCode);
     console.log('Input Verification Code:', verificationCode);
@@ -304,8 +309,7 @@ async register(registerDto: RegisterDTO): Promise<User> {
       await this.sendEmail(email, 'Email Verification Code', content);
       await this.userModel.updateOne({ email },{ verificationCode })
     }
-    
-
+  
   async sendPasswordResetEmail(
     email: string,
     resetCode: string,

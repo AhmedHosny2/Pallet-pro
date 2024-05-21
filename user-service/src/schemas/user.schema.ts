@@ -5,7 +5,7 @@ export const UserSchema = new mongoose.Schema({
     first_name: { type: String, required: true },
     last_name: { type: String, required: true },
     password: { type: String, required: true },
-    role: { type: String, enum: ['user', 'admin'], default: 'user' },
+    role: { type: String, enum: ['user'], default: 'user' },
     created_at: { type: Date, default: Date.now },
     updated_at: { type: Date, default: Date.now },
     resetCode: { type: String, required: false },
@@ -13,5 +13,5 @@ export const UserSchema = new mongoose.Schema({
     verificationCode: { type: String, required: false },
     verified: { type: Boolean, default: false },
     selected_address_id: { type: mongoose.Schema.Types.ObjectId, ref: 'Address' },
-    wishList: { type: Array, default: [] },
+    wishLists: { type: Array, default: [] },
 });
