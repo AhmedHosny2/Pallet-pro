@@ -5,7 +5,6 @@ import { User } from '../interfaces/user.interface';
 import { AuthService } from '../services/auth.service';
 import { LoginDto } from '../dtos/login.dto';
 import { ResetPasswordDto } from '../dtos/reset-password.dto';
-import { VerifyEmailDto } from 'src/dtos/verify-email.dto';
 import { RateProductDto } from 'src/dtos/rateProductDto.dto';
 import { JwtAuthGuard } from 'src/strategies/jwt-auth.guard';
 import { MessagePattern } from '@nestjs/microservices';
@@ -23,14 +22,14 @@ export class AuthController {
     return await this.authService.register(registerDto);
   }
 
-  @Post('verify-email')
-  async verifyEmail(@Body() verifyEmailDto: VerifyEmailDto): Promise<{ message: string }> {
+  @Get('verify-email/:verificationCode')
+  async verifyEmail(@Param() params: any): Promise< string > {
     try {
-      const { email, verificationCode } = verifyEmailDto;
-      const user = await this.authService.verifyEmail(email, verificationCode);
-      return { message: 'Email verified successfully. You can now log in.' };
+      console.log('verificationCode:', params.verificationCode);
+      const user = await this.authService.verifyEmail(params.verificationCode);
+      return 'Email verified successfully. You can now log in.';
     } catch (error) {
-      return { message: error.message };
+      return error.message;
     }
   }
 
