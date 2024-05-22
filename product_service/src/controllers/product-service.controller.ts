@@ -17,6 +17,14 @@ export class ProductServiceController {
     return req.user;
   }
 
+  // create wish list 
+// @UseGuards(JwtAuthGuard) 
+// @Post('wishlist/:id')
+// async createWishlist(@Request() req, @Body() wishlistDto: WishlistDto) {
+//     return this.productService.addToWishlist( wishlistDto, req.user.userId);
+//   }
+
+
   // start with user get all products
   @Get('/')
   async getAllProducts() {
@@ -41,11 +49,7 @@ export class ProductServiceController {
         return this.productService.rentProduct(id, rentProductDto);
     }
 
-// create wish list 
-@Post('wishlist/:id')
-async createWishlist(@Body() wishlistDto: WishlistDto) {
-    return this.productService.addToWishlist( wishlistDto);
-  }
+
 
   // http://localhost:3000/product/
   // http://localhost:3000/product/create

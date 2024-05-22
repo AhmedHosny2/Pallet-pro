@@ -14,7 +14,7 @@ import { MailerService } from '@nestjs-modules/mailer';
 import { hash } from 'bcrypt';
 import { auth } from 'google-auth-library';
 import { v4 as uuidv4 } from 'uuid';
-import * as IP from 'ip';
+// import * as IP from 'ip';
 
 @Injectable()
 
@@ -181,7 +181,7 @@ export class ProfileService {
       const email = updateProfileDTO.email;
       const verificationCode = uuidv4() + uuidv4() + uuidv4() + uuidv4();
       console.log('Verification Code:', verificationCode);
-      const content = `<p>Your verification link is: ${"http://" + IP.address() + ":5000/auth/verify-email/" + verificationCode}</p>`;
+      const content = `<p>Your verification link is: ${"http://"  + ":5000/auth/verify-email/" + verificationCode}</p>`;
       await this.mailerService.sendMail({
         to: email,
         subject: "Email Update Verification Link",

@@ -116,7 +116,7 @@ export class ProductService {
     product.ratingList.push({
       rating: rateProductDto.rating,
       review: rateProductDto.review,
-      userId: rateProductDto.userId,
+      // userId: rateProductDto.userId,
     });
     await product.save();
     console.log('Product rated:', product);
@@ -161,11 +161,11 @@ export class ProductService {
     return product;
   }
   // product will produce an event to the kafka broker to add a product to user wishlist over topic 
-  async addToWishlist(wishlistDto: WishlistDto) {
-    console.log('Adding to wishlist');
-    await this.produceEvent('add_to_wishlist', wishlistDto);
-    console.log('Added to wishlist:', wishlistDto);
-    return wishlistDto;
-  }
+  // async addToWishlist(wishlistDto: WishlistDto) {
+  //   console.log('Adding to wishlist');
+  //   await this.produceEvent('add_to_wishlist', wishlistDto);
+  //   console.log('Added to wishlist:', wishlistDto);
+  //   return wishlistDto;
+  // }
   
 }

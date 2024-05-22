@@ -15,7 +15,7 @@ import { OAuth2Client } from 'google-auth-library';
 import { RateProductDto } from 'src/dtos/rateProductDto.dto';
 import { ProfileService } from './profile.service';
 import { v4 as uuidv4 } from 'uuid';
-import * as IP from 'ip';
+// import * as IP from 'ip';
 
 @Injectable()
 export class AuthService {
@@ -295,7 +295,7 @@ async register(registerDto: RegisterDTO): Promise<User> {
     }
 
     async sendVerificationEmail(email: string, verificationCode: string): Promise<void> {
-      const content = `<p>Your verification link is: ${"http://" + IP.address() + ":5000/auth/verify-email" + verificationCode}</p>`;
+      const content = `<p>Your verification link is: ${"http://"  + ":5000/auth/verify-email" + verificationCode}</p>`;
       await this.sendEmail(email, 'Email Verification Link', content);
       await this.userModel.updateOne({ email },{ verificationCode })
     }

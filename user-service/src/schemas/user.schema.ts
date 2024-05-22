@@ -14,4 +14,5 @@ export const UserSchema = new mongoose.Schema({
     verified: { type: Boolean, default: false },
     selected_address_id: { type: mongoose.Schema.Types.ObjectId, ref: 'Address' },
     wishLists: { type: Array, default: [] },
+    fav: { type: Array, default: [] },
 });
