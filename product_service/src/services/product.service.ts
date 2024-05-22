@@ -165,4 +165,5 @@ export class ProductService {
     console.log('Added to wishlist:', wishlistDto);
     return wishlistDto;
   }
+  
 }

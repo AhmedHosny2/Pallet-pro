@@ -8,12 +8,12 @@ import {
 
 export class CreateProductDto {
   @IsString()
-  title: string;
+  name: string;
 
   @IsString()
   description: string;
   @IsString()
-  images:  Array<string>;
+  images:  string;
   @IsNotEmpty()
   price: string;
   @IsNotEmpty()
@@ -21,8 +21,15 @@ export class CreateProductDto {
   @IsNotEmpty()
   @IsString()
   specifications: string;
+  // add label and color
+  @IsNotEmpty()
+  label: string;
+
+  @IsNotEmpty()
+  colors: number;
+
 
   toString() {
-    return `title: ${this.title}, description: ${this.description}, image: ${this.images}, price: ${this.price}, stock: ${this.stock}`;
+    return `title: ${this.name}, description: ${this.description}, image: ${this.images}, price: ${this.price}, stock: ${this.stock}`;
   }
 }
