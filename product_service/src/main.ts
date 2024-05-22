@@ -7,7 +7,7 @@ async function bootstrap() {
   dotenv.config();
   const app = await NestFactory.create(AppModule);
   const authService = app.get(ProductService);
-  await authService.startConsumer();
+  //await authService.startConsumer();
   app.enableCors({
     origin: 'http://localhost:3000',
     credentials: true,
