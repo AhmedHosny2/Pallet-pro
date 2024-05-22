@@ -1,6 +1,6 @@
 import { HttpException, Injectable } from '@nestjs/common';
 import { InjectModel } from "@nestjs/mongoose";
-import { Model } from "mongoose";
+import mongoose, { Model } from "mongoose";
 import { User } from '../interfaces/user.interface';
 import { Address } from '../interfaces/address.interface';
 import { Kafka, logLevel } from 'kafkajs';
@@ -117,7 +117,7 @@ export class ProfileService {
     throw error;
   }
 
-  async getProfile(userId: string): Promise<any> {
+  async getProfile(userId: string): Promise<any> {//
     const user = await this.userModel.findById(userId);
     const address = await this.addressModel.findOne({ user_id: userId, _id: user.selected_address_id });
     user.password = undefined;
@@ -161,7 +161,7 @@ export class ProfileService {
     return user;
   }
 
-  async updateProfile(userId: string, updateProfileDTO: UpdateProfileDTO): Promise<User> {
+  async updateProfile(userId: string, updateProfileDTO: UpdateProfileDTO): Promise<User> {//
     await this.produceEvent('pre_update_profile', updateProfileDTO);
     if (updateProfileDTO.selected_address_id) {
       const address = await this.addressModel.findById(updateProfileDTO.selected_address_id);
@@ -181,7 +181,7 @@ export class ProfileService {
       const email = updateProfileDTO.email;
       const verificationCode = uuidv4() + uuidv4() + uuidv4() + uuidv4();
       console.log('Verification Code:', verificationCode);
-      const content = `<p>Your verification link is: ${"http://"  + ":5000/auth/verify-email/" + verificationCode}</p>`;
+      const content = `<p>Your verification link is: ${"http://localhost:5000/auth/verify-email/" + verificationCode}</p>`;
       await this.mailerService.sendMail({
         to: email,
         subject: "Email Update Verification Link",
@@ -247,37 +247,40 @@ export class ProfileService {
     return "Account deleted successfully";
   }
 
-  async getAllAddresses(userId: string) {
+  async getAllAddresses(userId: string) {//
     await this.produceEvent('get_all_addresses', userId);
     return await this.addressModel.find({ user_id: userId });
   }
 
-  async getSelectedAddress(userId: string) {
+  async getSelectedAddress(userId: string) {//
     await this.produceEvent('get_selected_address', userId);
     const user = await this.userModel.findById(userId);
     return await this.addressModel.findById(user.selected_address_id);
   }
 
-  async createAddress(userId: string, address: AddressDTO) {
+  async createAddress(userId: string, address: AddressDTO) {//
     if (!address.name || !address.country || !address.city || !address.address_line_1 || !address.zip_code || !address.phone_number) {
       throw new HttpException('Missing fields', 400);
     }
-    const newAddress = await this.addressModel.create(
-      { user_id: userId, 
-        name: address.name,
-        country: address.country,
-        city: address.city,
-        address_line_1: address.address_line_1,
-        address_line_2: address.address_line_2,
-        phone_number: address.phone_number,
-        zip_code: address.zip_code,
-        created_at: new Date(),
-      });
+    console.log('Create Address:', userId, address);
+    const newAddress = await this.addressModel.create({
+      _id: new mongoose.Types.ObjectId(),
+      user_id: userId, 
+      name: address.name,
+      country: address.country,
+      city: address.city,
+      address_line_1: address.address_line_1,
+      address_line_2: address.address_line_2,
+      phone_number: address.phone_number,
+      zip_code: address.zip_code,
+      created_at: new Date(),
+    });
+    console.log('New Address:', newAddress);
     await this.produceEvent('create_address', newAddress);
     return newAddress;
   }
 
-  async updateAddress(userId: string, address: AddressDTO) {
+  async updateAddress(userId: string, address: AddressDTO) {//
     const updatedAddress = await this.addressModel.findOneAndUpdate({ user_id: userId, id: address.id }, {
       name: address.name,
       country: address.country,
@@ -292,9 +295,9 @@ export class ProfileService {
     return updatedAddress;
   }
 
-  async deleteAddress(userId: string, addressId: string) {
+  async deleteAddress(userId: string, addressId: string) {//
     const user = await this.userModel.findById(userId);
-    if (user.selected_address_id === addressId) {
+    if (user.selected_address_id.toString() == addressId) {
       throw new HttpException('Cannot delete selected address', 400);
     }
     const deletedAddress = await this.addressModel.findOneAndDelete({ user_id: userId, _id: addressId });

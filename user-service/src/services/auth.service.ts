@@ -128,7 +128,7 @@ export class AuthService {
     console.log(password, user.password);
     const passwordMatch = await compare(password, user.password);
     if (!passwordMatch) {
-      throw new Error('Invalid password');
+      throw new HttpException('Invalid password', 400);
     }
 
     // produce the login event
@@ -148,44 +148,41 @@ export class AuthService {
     return {token};
   }
 
+  async register(registerDto: RegisterDTO): Promise<User> {
+    try {
+      if (!registerDto.email || !registerDto.password || !registerDto.first_name || !registerDto.last_name || !registerDto.address_name || !registerDto.country || !registerDto.city || !registerDto.address_line_1 || !registerDto.zip_code) {
+        throw new Error('Missing required fields');
+      }
+      if (await this.findUserByEmail(registerDto.email)) {
+        throw new Error('User already exists');
+      }
+      const hashedPassword = await hash(registerDto.password, 10);
+      console.log('Password hashed successfully:', hashedPassword);
 
-async register(registerDto: RegisterDTO): Promise<User> {
-  try {
-    if (!registerDto.email || !registerDto.password || !registerDto.first_name || !registerDto.last_name || !registerDto.address_name || !registerDto.country || !registerDto.city || !registerDto.address_line_1 || !registerDto.zip_code) {
-      throw new Error('Missing required fields');
+      const verificationCode = uuidv4() + uuidv4() + uuidv4() + uuidv4();
+      const userDto = { ...registerDto, password: hashedPassword }; // we hashed the password
+      const registeredUser = await this.registerUser(userDto, verificationCode); // Pass verification code
+      await this.sendVerificationEmail(registerDto.email, verificationCode); // Pass verification code
+
+      // produce the register event
+      await this.produceEvent('user_register', { email: registerDto.email });
+      console.log('User register event produced.');
+
+      return registeredUser;  
+    } catch (error) {
+      console.error('Error registering user:', error);
+      throw error;
     }
-    if (await this.findUserByEmail(registerDto.email)) {
-      throw new Error('User already exists');
-    }
-    const hashedPassword = await hash(registerDto.password, 10);
-    console.log('Password hashed successfully:', hashedPassword);
-
-    const verificationCode = uuidv4() + uuidv4() + uuidv4() + uuidv4();
-    const userDto = { ...registerDto, password: hashedPassword }; // we hashed the password
-    const registeredUser = await this.registerUser(userDto, verificationCode); // Pass verification code
-    await this.sendVerificationEmail(registerDto.email, verificationCode); // Pass verification code
-
-    // produce the register event
-    await this.produceEvent('user_register', { email: registerDto.email });
-    console.log('User register event produced.');
-
-    return registeredUser;  
-  } catch (error) {
-    console.error('Error registering user:', error);
-    throw error;
   }
-}
 
-  async resetPassword(email: string, resetCode: string, newPassword: string): Promise<void> {
-    const user = await this.findUserByEmail(email);
+  async resetPassword(resetCode: string, newPassword: string): Promise<string> {
+    console.log('ResetPassword method called with resetCode:', resetCode);
+    const user = await this.userModel.findOne({resetCode}); 
     if (!user) {
-      throw new Error('User not found');
+      console.log('User not found');
+      throw new HttpException('User not found', 400);
     }
-
-    // validate the reset code
-    if (user.resetCode !== resetCode) {
-      throw new Error('Invalid reset code');
-    }
+    console.log('User found:', user);
 
     // hash the new password
     const hashedPassword = await hash(newPassword, 10);
@@ -194,18 +191,19 @@ async register(registerDto: RegisterDTO): Promise<User> {
     // update the user's password
     user.password = hashedPassword;
     user.resetCode = null;
-    await this.produceEvent('user_reset_password', { email });
+    await this.produceEvent('user_reset_password', user.email);
     await user.save();
+    return "Password reset successfully.";
   }
 
   async generateResetCode(email: string): Promise<string> {
     const user = await this.findUserByEmail(email);
     if (!user) {
-      throw new Error('User not found');
+      throw new HttpException('User not found', 400);
     }
 
     // generate a random reset code
-    const resetCode = Math.random().toString(36).substring(2, 8);
+    const resetCode = uuidv4() + uuidv4() + uuidv4() + uuidv4();
     console.log('Reset code generated:', resetCode);
 
     // update the user's reset code
@@ -233,8 +231,7 @@ async register(registerDto: RegisterDTO): Promise<User> {
     user.verificationCode = null;
     await user.save();
     return user;
-}
-
+  }
 
   private async produceEvent(topic: string, value: any) {
     await this.producer.send({
@@ -243,68 +240,68 @@ async register(registerDto: RegisterDTO): Promise<User> {
     });
   }
 
-    async registerUser(registerDTO: RegisterDTO, verificationCode: string): Promise<User> {
-      console.log('RegisterUser method called with email:', registerDTO.email)
-      const user = await this.userModel.create({
-        email: registerDTO.email,
-        password: registerDTO.password,
-        first_name: registerDTO.first_name,
-        last_name: registerDTO.last_name,
-        role: 'user',
-        verificationCode: verificationCode,
-        created_at: new Date(),
-        verified: false,
-      });
-      const address = await this.profileService.createAddress(user.id, {
-        name: registerDTO.address_name,
-        country: registerDTO.country,
-        city: registerDTO.city,
-        address_line_1: registerDTO.address_line_1,
-        address_line_2: registerDTO.address_line_2,
-        zip_code: registerDTO.zip_code,
-        phone_number: registerDTO.phone_number,
-        id: null
-      });
-      await this.userModel.updateOne({ email: registerDTO.email }, { selected_address_id: address.id });
-      // await this.sendVerificationEmail(registerDTO.email, verificationCode);
-      return user;
-    }
+  async registerUser(registerDTO: RegisterDTO, verificationCode: string): Promise<User> {
+    console.log('RegisterUser method called with email:', registerDTO.email)
+    const user = await this.userModel.create({
+      email: registerDTO.email,
+      password: registerDTO.password,
+      first_name: registerDTO.first_name,
+      last_name: registerDTO.last_name,
+      role: 'user',
+      verificationCode: verificationCode,
+      created_at: new Date(),
+      verified: false,
+    });
+    const address = await this.profileService.createAddress(user.id, {
+      name: registerDTO.address_name,
+      country: registerDTO.country,
+      city: registerDTO.city,
+      address_line_1: registerDTO.address_line_1,
+      address_line_2: registerDTO.address_line_2,
+      zip_code: registerDTO.zip_code,
+      phone_number: registerDTO.phone_number,
+      id: null
+    });
+    await this.userModel.updateOne({ email: registerDTO.email }, { selected_address_id: address.id });
+    // await this.sendVerificationEmail(registerDTO.email, verificationCode);
+    return user;
+  }
   
-    async findUserByEmail(email: string): Promise<User | null> { // this method takes an email as input and returns a User object or null if not found.
-      return this.userModel.findOne({ email }).exec();
-    }
+  async findUserByEmail(email: string): Promise<User | null> { // this method takes an email as input and returns a User object or null if not found.
+    return this.userModel.findOne({ email }).exec();
+  }
 
-    async validateUser(email: string, password: string): Promise<User | null> {
-      const user = await this.findUserByEmail(email);
-      if (!user) {
-        return null;
-      }
-      const passwordMatch = await compare(password, user.password);
-      if (!passwordMatch) {
-        return null;
-      }
-      return user;
+  async validateUser(email: string, password: string): Promise<User | null> {
+    const user = await this.findUserByEmail(email);
+    if (!user) {
+      return null;
     }
+    const passwordMatch = await compare(password, user.password);
+    if (!passwordMatch) {
+      return null;
+    }
+    return user;
+  }
 
-    async sendEmail(receiver: string, subject: string, content: string): Promise<void> {
-      await this.mailerService.sendMail({
-        to: receiver,
-        subject: subject,
-        html: content,
-      });
-    }
+  async sendEmail(receiver: string, subject: string, content: string): Promise<void> {
+    await this.mailerService.sendMail({
+      to: receiver,
+      subject: subject,
+      html: content,
+    });
+  }
 
-    async sendVerificationEmail(email: string, verificationCode: string): Promise<void> {
-      const content = `<p>Your verification link is: ${"http://"  + ":5000/auth/verify-email" + verificationCode}</p>`;
-      await this.sendEmail(email, 'Email Verification Link', content);
-      await this.userModel.updateOne({ email },{ verificationCode })
-    }
+  async sendVerificationEmail(email: string, verificationCode: string): Promise<void> {
+    const content = `<p>Your verification link is: ${"http://localhost:5000/auth/verify-email/" + verificationCode}</p>`;
+    await this.sendEmail(email, 'Email Verification Link', content);
+    await this.userModel.updateOne({ email },{ verificationCode })
+  }
   
   async sendPasswordResetEmail(
     email: string,
     resetCode: string,
   ): Promise<void> {
-    const content = `<p>Your password reset code is: ${resetCode}</p>`;
+    const content = `<p>Your password reset link is: http://localhost:3000/verifyResetPassword?verificationCode=${resetCode}</p>`;
     await this.sendEmail(email, 'Password Reset Verification Code', content);
   }
 
