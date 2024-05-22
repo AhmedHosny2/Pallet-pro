@@ -168,10 +168,10 @@ export class ProductService {
   }
   async getAllFavs(userId: string): Promise<any> {
     const user = await this.userModel.findById(userId);
-    if (!user.wishLists) {
-      user.wishLists = [];
+    if (!user.fav) {
+      user.fav = [];
     }
-    return user.wishLists;
+    return user.fav;
   }
 
   // add fav
