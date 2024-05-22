@@ -3,10 +3,12 @@ import { Document } from 'mongoose';
 export interface ProductInterface {
 
 // the product will have a title , description, image, price and stock
-readonly title: string;
+readonly name: string;
 readonly description: string;
 readonly image: string;
 readonly price: string;
+readonly label: string;
+readonly colors:number;
  stock: string;
  rentList:
     {
@@ -19,7 +21,7 @@ readonly price: string;
         {
         rating: number;
         review: string;
-        userId: string;
+      
         }[];
 }
 

@@ -10,6 +10,9 @@ import { AddToWishlistDTO } from 'src/dtos/wishListAdd';
 import { RemoveFromWishlistDTO } from 'src/dtos/wishlistRemove.dto';
 import { DeleteWishlistDTO } from 'src/dtos/wishlistDelete';
 import { GetWishlistDTO } from 'src/dtos/wishlistGet';
+import { FavDTO } from 'src/dtos/fav.dto';
+import { deleteFavDTO } from 'src/dtos/deleteFavDTO.dto';
+// 
 
 @Injectable()
 export class ProductService {
@@ -111,6 +114,7 @@ export class ProductService {
         id: addToWishlistDTO.productId,
         price: addToWishlistDTO.price,
         amount: addToWishlistDTO.amount,
+        images: ''
       });
     }
     wishlist.price = wishlist.products.reduce((acc, item) => acc + item.price, 0);
@@ -162,5 +166,35 @@ export class ProductService {
     }
     return user.wishLists;
   }
+  async getAllFavs(userId: string): Promise<any> {
+    const user = await this.userModel.findById(userId);
+    if (!user.wishLists) {
+      user.wishLists = [];
+    }
+    return user.wishLists;
+  }
+
+  // add fav
+  async addFav(userId: string, favDTO: FavDTO): Promise<any> {
+    const user = await this.userModel.findById(userId);
+    if (!user.fav) {
+      user.fav = [];
+    }
+    user.fav.push(favDTO);
+    await user.save();
+    return user.fav;
+  }
+  async removeFavorite(userId: string, favDTO: deleteFavDTO): Promise<any> {
+    const user = await this.userModel.findById(userId);
+    if (!user.fav) {
+      user.fav = [];
+    }
+    user.fav = user.fav.filter((item) => item.productId !== favDTO.productId);
+    await user.save();
+    console.log(user.fav+"\n\n\n\n\n\n\n\n\n\n");
+    
+    return user.fav;
+  }
+  
 
 }

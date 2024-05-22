@@ -12,6 +12,11 @@ export interface User extends Document {
     verificationCode?: string;
     verified: boolean;
     selected_address_id: string;
+    fav: {
+        productId: string;
+        name: string;
+        price: number;
+    }[];
     wishLists: {
         name: string;
         image: string;
@@ -20,6 +25,7 @@ export interface User extends Document {
             id: string;
             price: number;
             amount: number;
+            images: string;
         }[];
      }[];
 }

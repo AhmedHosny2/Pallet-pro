@@ -32,7 +32,7 @@ import { SessionMiddleware } from './session.middleware';
     ]),
     MongooseModule.forRootAsync({
       useFactory: () => ({
-        uri: env.MONGODB_URI,
+        uri: "mongodb+srv://admin:ma82345678omm@cluster0.ynli9r8.mongodb.net/",
       }),
     }),
     MongooseModule.forFeature([{ name: 'User', schema: UserSchema }, { name: 'Address', schema: AddressSchema }]), // the models that will be used in this module

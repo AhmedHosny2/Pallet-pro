@@ -15,7 +15,7 @@ import { OAuth2Client } from 'google-auth-library';
 import { RateProductDto } from 'src/dtos/rateProductDto.dto';
 import { ProfileService } from './profile.service';
 import { v4 as uuidv4 } from 'uuid';
-import * as IP from 'ip';
+// import * as IP from 'ip';
 
 @Injectable()
 export class AuthService {

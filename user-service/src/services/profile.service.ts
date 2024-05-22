@@ -14,7 +14,7 @@ import { MailerService } from '@nestjs-modules/mailer';
 import { hash } from 'bcrypt';
 import { auth } from 'google-auth-library';
 import { v4 as uuidv4 } from 'uuid';
-import * as IP from 'ip';
+// import * as IP from 'ip';
 
 @Injectable()
 

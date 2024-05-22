@@ -10,7 +10,8 @@ import { AddToWishlistDTO } from 'src/dtos/wishListAdd';
 import { RemoveFromWishlistDTO } from 'src/dtos/wishlistRemove.dto';
 import { DeleteWishlistDTO } from 'src/dtos/wishlistDelete';
 import { GetWishlistDTO } from 'src/dtos/wishlistGet';
-
+import {FavDTO} from "src/dtos/fav.dto"
+import {deleteFavDTO} from "src/dtos/deleteFavDTO.dto"
 @Controller('products')
 export class ProductsController {
   constructor(
@@ -66,5 +67,26 @@ export class ProductsController {
     const userId = req.user?.userId;
     return this.productService.getAllWishlists(userId);
   }
+  @Get('getAllFavorites')
+  @UseGuards(JwtAuthGuard)
+  async getAllFav(@Request() req): Promise<any> {
+    const userId = req.user?.userId;
+    return this.productService.getAllFavs(userId);
+  }
+// post fav
+@Post('fav')
+@UseGuards(JwtAuthGuard)
+async postFav(@Request() req, @Body() favDTo: FavDTO): Promise<any> {
+  const userId = req.user?.userId;
+  return this.productService.addFav(userId, favDTo);
+}
+// delete fav
+@Delete('fav')
+@UseGuards(JwtAuthGuard)
+async deleteFav(@Request() req, @Body() favDTo: deleteFavDTO): Promise<any> {
+  const userId = req.user?.userId;
+  return this.productService.removeFavorite(userId, favDTo);
+}
 
+  
 }
