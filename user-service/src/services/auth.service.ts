@@ -295,7 +295,7 @@ async register(registerDto: RegisterDTO): Promise<User> {
     }
 
     async sendVerificationEmail(email: string, verificationCode: string): Promise<void> {
-      const content = `<p>Your verification link is: ${"http://" + IP.address() + ":5000/auth/verify-email" + verificationCode}</p>`;
+      const content = `<p>Your verification link is: ${"http://localhost:5000/auth/verify-email/" + verificationCode}</p>`;
       await this.sendEmail(email, 'Email Verification Link', content);
       await this.userModel.updateOne({ email },{ verificationCode })
     }
