@@ -20,6 +20,9 @@ import { ProfileController } from './controllers/profile.controller';
 import { ProfileService } from './services/profile.service';
 import { ProductsController } from './controllers/products.controller';
 import { ProductService } from './services/product.service';
+import { MiddlewareConsumer, NestModule } from '@nestjs/common';
+import * as session from 'express-session';
+import { SessionMiddleware } from './session.middleware';
 
 @Module({
   imports: [ // the modules that will be imported, we will use MongooseModule to connect to the MongoDB database
@@ -56,7 +59,21 @@ import { ProductService } from './services/product.service';
    // JwtModule.register({})
   ],
   controllers: [AuthController, CartController, ProductsController, ProfileController], // to handle requests and responses, they define the routes and the corresponding HTTP request methods
-  providers: [AuthService, ...identityProviders, ...databaseProviders,JwtModule, LocalStrategy,JwtStrategy, CartService, ProfileService, ProductService],  // to define components within the application that can be injected into other components
+  providers: [AuthService, ...identityProviders, ...databaseProviders,JwtModule, LocalStrategy,JwtStrategy, CartService, ProfileService, ProductService], // to define components within the application that can be injected into other components
   exports: [...databaseProviders] // which providers should be available to other modules to import
 })
-export class AppModule {}
+export class AppModule implements NestModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer
+      .apply(
+        session({
+          secret: 'Liverpool',
+          resave: false,
+          saveUninitialized: false,
+          cookie: { maxAge: 3600000 }, // 1 hour
+        }),
+        SessionMiddleware
+      )
+      .forRoutes('*'); // Apply to all routes 
+  }
+}
