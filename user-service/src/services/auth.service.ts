@@ -128,7 +128,7 @@ export class AuthService {
     console.log(password, user.password);
     const passwordMatch = await compare(password, user.password);
     if (!passwordMatch) {
-      throw new Error('Invalid password');
+      throw new HttpException('Invalid password', 400);
     }
 
     // produce the login event
@@ -175,16 +175,14 @@ export class AuthService {
     }
   }
 
-  async resetPassword(email: string, resetCode: string, newPassword: string): Promise<void> {
-    const user = await this.findUserByEmail(email);
+  async resetPassword(resetCode: string, newPassword: string): Promise<string> {
+    console.log('ResetPassword method called with resetCode:', resetCode);
+    const user = await this.userModel.findOne({resetCode}); 
     if (!user) {
-      throw new Error('User not found');
+      console.log('User not found');
+      throw new HttpException('User not found', 400);
     }
-
-    // validate the reset code
-    if (user.resetCode !== resetCode) {
-      throw new Error('Invalid reset code');
-    }
+    console.log('User found:', user);
 
     // hash the new password
     const hashedPassword = await hash(newPassword, 10);
@@ -193,8 +191,9 @@ export class AuthService {
     // update the user's password
     user.password = hashedPassword;
     user.resetCode = null;
-    await this.produceEvent('user_reset_password', { email });
+    await this.produceEvent('user_reset_password', user.email);
     await user.save();
+    return "Password reset successfully.";
   }
 
   async generateResetCode(email: string): Promise<string> {

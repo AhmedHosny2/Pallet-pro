@@ -49,30 +49,21 @@ export class AuthController {
   async resetPassword(
     @Body() resetPasswordDto: ResetPasswordDto
   ): Promise<{ message: string }> {
-    try {
-      // Generate reset code and send email
-      await this.authService.generateResetCode(resetPasswordDto.email);
-      return { message: 'Reset code sent to your email' };
-    } catch (error) {
-      return { message: error.message };
-    }
+    // Generate reset code and send email
+    await this.authService.generateResetCode(resetPasswordDto.email);
+    return { message: 'Reset code sent to your email' };
   }
 
   @Post('reset-password/confirm')
   async resetPasswordConfirm(
     @Body() resetPasswordDto: ResetPasswordDto
   ): Promise<{ message: string }> {
-    try {
-      // Reset password
-      await this.authService.resetPassword(
-        resetPasswordDto.email,
-        resetPasswordDto.resetCode,
-        resetPasswordDto.newPassword
-      );
-      return { message: 'Password reset successfully' };
-    } catch (error) {
-      return { message: error.message };
-    }
+    // Reset password
+    await this.authService.resetPassword(
+      resetPasswordDto.resetCode,
+      resetPasswordDto.newPassword
+    );
+    return { message: 'Password reset successfully' };
   }
 
   @UseGuards(JwtAuthGuard)
