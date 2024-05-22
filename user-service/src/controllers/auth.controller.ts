@@ -51,7 +51,7 @@ export class AuthController {
   ): Promise<{ message: string }> {
     try {
       // Generate reset code and send email
-      const resetCode = await this.authService.generateResetCode(resetPasswordDto.email);
+      await this.authService.generateResetCode(resetPasswordDto.email);
       return { message: 'Reset code sent to your email' };
     } catch (error) {
       return { message: error.message };
