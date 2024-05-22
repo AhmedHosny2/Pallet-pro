@@ -116,12 +116,13 @@ export class ProfileService {
     throw error;
   }
 
-  async getProfile(userId: string): Promise<User> {
+  async getProfile(userId: string): Promise<any> {
     const user = await this.userModel.findById(userId);
+    const address = await this.addressModel.findOne({ user_id: userId, _id: user.selected_address_id });
     user.password = undefined;
     user.verificationCode = undefined;
     await this.produceEvent('get_profile', user);
-    return user;
+    return {user, address};
   }
   
   async updatePassword(userId: string): Promise<String> {
@@ -171,34 +172,32 @@ export class ProfileService {
       }
     }
     let user = await this.userModel.findById(userId);
-    if (updateProfileDTO.email) {
+    if (updateProfileDTO.email != user.email) {
       const userWithEmail = await this.userModel.findOne({ email: updateProfileDTO.email });
-      if (userWithEmail) {
+      if (userWithEmail && userWithEmail._id.toString() !== userId){
         throw new HttpException('Email already in use', 400);
       }
-      else {
-        const email = updateProfileDTO.email;
-        const code = Math.floor(100000 + Math.random() * 900000);
-        const content = `<p>Your email update verification code is: ${code}</p>`;
-        await this.mailerService.sendMail({
-          to: email,
-          subject: "Email Update Verification Code",
-          html: content,
-        });
-        user = await this.userModel.findByIdAndUpdate(userId, {
-          verificationCode: code,
-          verified: false,
-          email: email,
-          updated_at: new Date(),
-          selected_address_id: updateProfileDTO.selected_address_id,
-          first_name: updateProfileDTO.first_name,
-          last_name: updateProfileDTO.last_name
-        });
-        user.password = undefined;
-        user.verificationCode = undefined;
-
-      }
+      const email = updateProfileDTO.email;
+      const code = Math.floor(100000 + Math.random() * 900000);
+      const content = `<p>Your email update verification code is: ${code}</p>`;
+      await this.mailerService.sendMail({
+        to: email,
+        subject: "Email Update Verification Code",
+        html: content,
+      });
+      user.verified = false;
+      user.verificationCode = code + '';
+      user.email = email;
     }
+    user.first_name = updateProfileDTO.first_name;
+    user.last_name = updateProfileDTO.last_name;
+    user.selected_address_id = updateProfileDTO.selected_address_id;
+    user.updated_at = new Date();
+    await user.save();
+    
+    user.password = undefined;
+    user.verificationCode = undefined;
+
     await this.produceEvent('post_update_profile', user);
     return user;
   }

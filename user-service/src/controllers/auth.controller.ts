@@ -1,14 +1,15 @@
-import { Controller, Get, Post, Body, Req, Res, HttpStatus, UseGuards, Param, Request } from '@nestjs/common';
+import { Controller, Get, Post, Body, Req, HttpStatus, UseGuards, Param, Request, Response } from '@nestjs/common';
+import { Response as Res } from 'express';
 import { RegisterDTO } from '../dtos/register.dto';
 import { User } from '../interfaces/user.interface';
 import { AuthService } from '../services/auth.service';
 import { LoginDto } from '../dtos/login.dto';
-import { Response } from 'express';
 import { ResetPasswordDto } from '../dtos/reset-password.dto';
 import { VerifyEmailDto } from 'src/dtos/verify-email.dto';
 import { RateProductDto } from 'src/dtos/rateProductDto.dto';
 import { JwtAuthGuard } from 'src/strategies/jwt-auth.guard';
 import { MessagePattern } from '@nestjs/microservices';
+import { access } from 'fs';
 
 @Controller('auth') // kolohom hayob2o b /auth/...
 export class AuthController {
@@ -34,8 +35,15 @@ export class AuthController {
   }
 
   @Post('login') // hena hatob2a b /auth/login
-  async login(@Body() loginDto: LoginDto): Promise<{ token: string }> { //to be done: change this to jwt token instead of session id
-  return this.authService.login(loginDto);
+  async login(@Body() loginDto: LoginDto, @Response() res: Res): Promise<any> { //to be done: change this to jwt token instead of session id
+    const user = await this.authService.login(loginDto);
+    return res.cookie('Authorization', 'Bearer ' + user.token, {
+      httpOnly: true,
+      secure: true,
+      sameSite: "none",
+      domain: "localhost",
+      expires: new Date(Date.now() + 60 * 60 * 10 * 1000),
+    }).json({ token: user.token });
   }
   
   @Post('reset-password')

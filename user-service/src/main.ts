@@ -9,7 +9,11 @@ async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   const authService = app.get(AuthService);
   await authService.startConsumer();
-  app.enableCors();
+  // How to set the cors policy
+  app.enableCors({
+    origin: 'http://localhost:3000',
+    credentials: true,
+  });
   await app.listen(5000);
 }
 bootstrap();
