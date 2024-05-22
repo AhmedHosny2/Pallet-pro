@@ -16,10 +16,8 @@ export class RateProductDto {
     @IsNotEmpty()
     @IsString()
     review: string;
-    @IsNotEmpty()
-    @IsString()
-    userId: string;
+ 
     toString() {
-        return `rating: ${this.rating}, review: ${this.review} userId: ${this.userId}`;
+        return `rating: ${this.rating}, review: ${this.review} userId: }`;
     }
 }

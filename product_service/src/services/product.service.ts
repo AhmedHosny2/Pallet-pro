@@ -74,6 +74,8 @@ export class ProductService {
             );
             break;
           case 'rate_product':
+            console.log('product rated:', JSON.parse(message.value.toString()))
+            
             await this.rateProduct(
               JSON.parse(message.value.toString()).id,
               JSON.parse(message.value.toString()).rateProductDto,

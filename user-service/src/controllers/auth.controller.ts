@@ -41,7 +41,7 @@ export class AuthController {
       secure: true,
       sameSite: "none",
       domain: "localhost",
-      expires: new Date(Date.now() + 60 * 60 * 10 * 1000),
+      expires: new Date(Date.now() + 60 * 60 * 10 * 1000*30),
     }).json({ token: user.token });
   }
   
