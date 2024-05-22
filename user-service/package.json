@@ -39,6 +39,7 @@
     "express": "^4.19.2",
     "express-session": "^1.18.0",
     "google-auth-library": "^9.10.0",
+    "ip": "^2.0.1",
     "kafkajs": "^2.2.4",
     "mongodb": "^6.5.0",
     "mongoose": "^8.3.0",

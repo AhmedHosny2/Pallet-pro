@@ -12,8 +12,9 @@ import { AddressDTO } from '../dtos/address.dto';
 import { ConfirmUpdatePasswordDTO } from '../dtos/confirmUpdatePassword.dto';
 import { MailerService } from '@nestjs-modules/mailer';
 import { hash } from 'bcrypt';
-import { AuthService } from './auth.service';
 import { auth } from 'google-auth-library';
+import { v4 as uuidv4 } from 'uuid';
+import * as IP from 'ip';
 
 @Injectable()
 
@@ -178,15 +179,16 @@ export class ProfileService {
         throw new HttpException('Email already in use', 400);
       }
       const email = updateProfileDTO.email;
-      const code = Math.floor(100000 + Math.random() * 900000);
-      const content = `<p>Your email update verification code is: ${code}</p>`;
+      const verificationCode = uuidv4() + uuidv4() + uuidv4() + uuidv4();
+      console.log('Verification Code:', verificationCode);
+      const content = `<p>Your verification link is: ${"http://" + IP.address() + ":5000/auth/verify-email/" + verificationCode}</p>`;
       await this.mailerService.sendMail({
         to: email,
-        subject: "Email Update Verification Code",
+        subject: "Email Update Verification Link",
         html: content,
       });
       user.verified = false;
-      user.verificationCode = code + '';
+      user.verificationCode = verificationCode;
       user.email = email;
     }
     user.first_name = updateProfileDTO.first_name;
@@ -194,7 +196,7 @@ export class ProfileService {
     user.selected_address_id = updateProfileDTO.selected_address_id;
     user.updated_at = new Date();
     await user.save();
-    
+
     user.password = undefined;
     user.verificationCode = undefined;
 

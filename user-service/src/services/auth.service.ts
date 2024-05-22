@@ -13,9 +13,9 @@ import { MailerService } from '@nestjs-modules/mailer';
 import { ResetPasswordDto } from '../dtos/reset-password.dto';
 import { OAuth2Client } from 'google-auth-library';
 import { RateProductDto } from 'src/dtos/rateProductDto.dto';
-import { VerifyEmailDto } from 'src/dtos/verify-email.dto';
 import { ProfileService } from './profile.service';
-
+import { v4 as uuidv4 } from 'uuid';
+import * as IP from 'ip';
 
 @Injectable()
 export class AuthService {
@@ -160,7 +160,7 @@ async register(registerDto: RegisterDTO): Promise<User> {
     const hashedPassword = await hash(registerDto.password, 10);
     console.log('Password hashed successfully:', hashedPassword);
 
-    const verificationCode = Math.random().toString(36).substring(2, 8); // Generate verification code
+    const verificationCode = uuidv4() + uuidv4() + uuidv4() + uuidv4();
     const userDto = { ...registerDto, password: hashedPassword }; // we hashed the password
     const registeredUser = await this.registerUser(userDto, verificationCode); // Pass verification code
     await this.sendVerificationEmail(registerDto.email, verificationCode); // Pass verification code
@@ -219,26 +219,16 @@ async register(registerDto: RegisterDTO): Promise<User> {
     return resetCode;
   }
 
-  async verifyEmail(email: string, verificationCode: string): Promise<User> {
-    const user = await this.findUserByEmail(email);
+  async verifyEmail(verificationCode: string): Promise<User> {
+    const user = await this.userModel.findOne({ verificationCode: verificationCode });
     if (!user) {
-        throw new Error('User not found');
+        throw new HttpException('User not found', 400);
     }
 
     if (user.verified) {
       return user;
     }
 
-    // Log the verification codes for debugging
-    console.log('User Verification Code:', user.verificationCode);
-    console.log('Input Verification Code:', verificationCode);
-
-    // Check if the verification codes match
-    if (user.verificationCode !== verificationCode) {
-        throw new Error('Invalid verification code');
-    }
-
-    // If the verification codes match, proceed with verification
     user.verified = true;
     user.verificationCode = null;
     await user.save();
@@ -305,8 +295,8 @@ async register(registerDto: RegisterDTO): Promise<User> {
     }
 
     async sendVerificationEmail(email: string, verificationCode: string): Promise<void> {
-      const content = `<p>Your verification code is: ${verificationCode}</p>`;
-      await this.sendEmail(email, 'Email Verification Code', content);
+      const content = `<p>Your verification link is: ${"http://" + IP.address() + ":5000/auth/verify-email" + verificationCode}</p>`;
+      await this.sendEmail(email, 'Email Verification Link', content);
       await this.userModel.updateOne({ email },{ verificationCode })
     }
   
