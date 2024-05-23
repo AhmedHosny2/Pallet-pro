@@ -1,21 +1,22 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, OnModuleInit, OnModuleDestroy } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { CreateProductDto } from '../dtos/create-product.dto';
 import { UpdateProductDto } from '../dtos/update-product.dto';
-import { ProductInterface } from '../interfaces/product.interface/product.interface.interface';
+import { ProductInterface } from 'src/interfaces/product.interface/product.interface.interface';
 import { Kafka, Partitioners, logLevel } from 'kafkajs';
-import { log } from 'console';
-import e from 'express';
 import { ViewAllProductsDto } from '../dtos/view-all-products.dto';
 import { RentProductDto } from 'src/dtos/rent-product.dto';
 import { RateProductDto } from 'src/dtos/rateProductDto.dto';
 import { WishlistDto } from 'src/dtos/wishlistDto.dto';
+
 @Injectable()
-export class ProductService {
+export class ProductService implements OnModuleInit, OnModuleDestroy {
   private kafka: Kafka;
   private producer;
   private consumer;
+  private isConsumerStarted = false;
+
   constructor(
     @InjectModel('Product')
     private readonly productModel: Model<ProductInterface>,
@@ -31,6 +32,10 @@ export class ProductService {
   async onModuleInit() {
     await this.producer.connect();
     await this.consumer.connect();
+    if (!this.isConsumerStarted) {
+      await this.startConsumer();
+      this.isConsumerStarted = true;
+    }
   }
 
   async onModuleDestroy() {
@@ -43,44 +48,35 @@ export class ProductService {
     await this.consumer.subscribe({ topic: 'view_product' });
     await this.consumer.subscribe({ topic: 'rent_product' });
     await this.consumer.subscribe({ topic: 'rate_product' });
+    await this.consumer.subscribe({ topic: 'get_product_details' });
 
-    // comma and add here others
-    console.log(
-      'Consumer subscribed to topics: view_all_products, view_product, rent_product, rate_product',
-    );
+    console.log('Consumer subscribed to topics: view_all_products, view_product, rent_product, rate_product');
 
     await this.consumer.run({
       eachMessage: async ({ topic, partition, message }) => {
         console.log('Consumer running');
 
+        const messageValue = JSON.parse(message.value.toString());
+
         switch (topic) {
           case 'view_all_products':
-            console.log(
-              'All products here kafka:',
-              JSON.parse(message.value.toString()),
-            );
+            console.log('All products here kafka:', messageValue);
             break;
           case 'view_product':
-            console.log('product:', JSON.parse(message.value.toString()));
+            console.log('Product:', messageValue);
             break;
           case 'rent_product':
-            await this.rentProduct(
-              JSON.parse(message.value.toString()).id,
-              JSON.parse(message.value.toString()).rentProductDto,
-            );
-            console.log(
-              'product rented:',
-              JSON.parse(message.value.toString()),
-            );
+            await this.rentProduct(messageValue.id, messageValue.rentProductDto);
+            console.log('Product rented:', messageValue);
             break;
           case 'rate_product':
-            console.log('product rated:', JSON.parse(message.value.toString()))
-            
-            await this.rateProduct(
-              JSON.parse(message.value.toString()).id,
-              JSON.parse(message.value.toString()).rateProductDto,
-            );
-            console.log('product rated:', JSON.parse(message.value.toString()));
+            await this.rateProduct(messageValue.id, messageValue.rateProductDto);
+            console.log('Product rated:', messageValue);
+            break;
+          case 'get_product_details':
+            const { productId, correlationId } = messageValue;
+            const product = await this.getProductById(productId);
+            await this.produceEvent('product_details_response', { correlationId, product });
             break;
           default:
             console.log('Unknown event:', topic);
@@ -89,34 +85,29 @@ export class ProductService {
       },
     });
   }
-  catch(error) {
-    console.error('Error starting consumer:', error);
-    throw error;
-  }
+
   private async produceEvent(topic: string, value: any) {
     await this.producer.send({
       topic,
       messages: [{ value: JSON.stringify(value) }],
     });
   }
-  // view all products
+
+  // View all products
   async getAllProducts() {
     console.log('Getting all products');
-
     const products = await this.productModel.find().exec();
     console.log('All products:', products);
-    await this.produceEvent('view_all_products', { products });
     return products;
   }
+
   async rateProduct(id: string, rateProductDto: RateProductDto) {
     console.log('Rating a product');
     const product = await this.productModel.findById(id).exec();
     console.log('Product:', product);
-    // push in ratting list
     product.ratingList.push({
       rating: rateProductDto.rating,
       review: rateProductDto.review,
-      // userId: rateProductDto.userId,
     });
     await product.save();
     console.log('Product rated:', product);
@@ -130,13 +121,14 @@ export class ProductService {
     console.log('Product created:', product);
     return product;
   }
+
   async getProductById(id: string) {
     console.log('Getting product by id:', id);
     const product = await this.productModel.findById(id).exec();
     console.log('Product:', product);
-    await this.produceEvent('view_product', { product });
     return product;
   }
+
   async rentProduct(id: string, rentProductDto: RentProductDto) {
     console.log('Renting a product');
     const product = await this.productModel.findById(id).exec();
@@ -144,11 +136,7 @@ export class ProductService {
     if (Number(product.stock) < rentProductDto.quantity) {
       throw new Error('Not enough stock');
     }
-    product.stock = (
-      Number(product.stock) - rentProductDto.quantity
-    ).toString(); // Convert to string
-
-    // add data to rent array
+    product.stock = (Number(product.stock) - rentProductDto.quantity).toString();
     let renter = 1;
     product.rentList.push({
       quantity: rentProductDto.quantity,
@@ -160,12 +148,5 @@ export class ProductService {
     console.log('Product rented:', product);
     return product;
   }
-  // product will produce an event to the kafka broker to add a product to user wishlist over topic 
-  // async addToWishlist(wishlistDto: WishlistDto) {
-  //   console.log('Adding to wishlist');
-  //   await this.produceEvent('add_to_wishlist', wishlistDto);
-  //   console.log('Added to wishlist:', wishlistDto);
-  //   return wishlistDto;
-  // }
-  
 }
+
