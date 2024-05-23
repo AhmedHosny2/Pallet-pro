@@ -75,7 +75,7 @@ export class ProductService {
     });
   }
 
-  async createWishlist(userId: string, createWishlistDTO: CreateWishlistDTO): Promise<string> {
+  async createWishlist(userId: string, createWishlistDTO: CreateWishlistDTO): Promise<any> {
     const user = await this.userModel.findById(userId);
     if (!user.wishLists) {
       user.wishLists = [];
@@ -89,8 +89,14 @@ export class ProductService {
       price: 0,
       products: [],
     });
-    await user.save();
-    return 'Wishlist created';
+    await this.userModel.updateOne({
+      _id: userId
+    }, {
+      $set: {
+        wishLists: user.wishLists
+      }
+    });
+    return {message: 'Wishlist created', wishlists: user.wishLists};
   }
 
   async addToWishlist(userId: string, addToWishlistDTO: AddToWishlistDTO ): Promise<any> {
@@ -98,6 +104,8 @@ export class ProductService {
     if (!user.wishLists){
       user.wishLists = [];
     }
+    console.log(user);
+    console.log(addToWishlistDTO);
     const wishlist = user.wishLists.find((item) => item.name === addToWishlistDTO.wishListName);
     if (!wishlist) {
       throw new HttpException('Wishlist not found', 400);
@@ -105,7 +113,9 @@ export class ProductService {
     if (!wishlist.products) {
       wishlist.products = [];
     }
+    console.log(addToWishlistDTO);
     const product = wishlist.products.find((item) => item.id === addToWishlistDTO.productId);
+    console.log(product);
     if (product) {
       product.amount = addToWishlistDTO.amount;
       product.price = addToWishlistDTO.price;
@@ -114,12 +124,21 @@ export class ProductService {
         id: addToWishlistDTO.productId,
         price: addToWishlistDTO.price,
         amount: addToWishlistDTO.amount,
-        images: ''
+        image: addToWishlistDTO.image,
+        name: addToWishlistDTO.productName,
       });
     }
-    wishlist.price = wishlist.products.reduce((acc, item) => acc + item.price, 0);
-    await user.save();
-    return {message: 'Product added to wishlist', wishlist: wishlist};
+    wishlist.price = wishlist.products.reduce((acc, item) => acc + item.price * item.amount, 0);
+    user.wishLists = user.wishLists.map((item) => item.name === addToWishlistDTO.wishListName ? wishlist : item);
+    await this.userModel.updateOne({
+      _id: userId
+    }, {
+      $set: {
+        wishLists: user.wishLists
+      }
+    });
+    console.log(user);
+    return {message: 'Product added to wishlist', wishlists: user.wishLists};
   }
 
   async removeFromWishlist(userId: string, removeFromWishlistDTO: RemoveFromWishlistDTO): Promise<any> {
@@ -127,18 +146,27 @@ export class ProductService {
     if (!user.wishLists) {
       user.wishLists = [];
     }
+    console.log(user);
     const wishlist = user.wishLists.find((item) => item.name === removeFromWishlistDTO.wishListName);
     if (!wishlist) {
       throw new HttpException('Wishlist not found', 400);
     }
-    const product = wishlist.products.find((item) => item.id === removeFromWishlistDTO.productId);
+    console.log(wishlist);
+    const product = wishlist.products?.find((item) => item?.id === removeFromWishlistDTO?.productId);
     if (!product) {
       throw new HttpException('Product not found', 400);
     }
-    wishlist.products = wishlist.products.filter((item) => item.id !== removeFromWishlistDTO.productId);
-    wishlist.price = wishlist.products.reduce((acc, item) => acc + item.price, 0);
-    await user.save();
-    return {message: 'Product removed from wishlist', wishlist: wishlist};
+    console.log(userId, removeFromWishlistDTO);
+    wishlist.products = wishlist.products?.filter((item) => item.id !== removeFromWishlistDTO.productId);
+    wishlist.price = wishlist.products?.reduce((acc, item) => acc + item.price * item.amount, 0);
+    await this.userModel.updateOne({
+      _id: userId
+    }, {
+      $set: {
+        wishLists: user.wishLists
+      }
+    });
+    return {message: 'Product removed from wishlist', wishlists: user.wishLists};
   }
 
   async getWishlist(userId: string, getWishlistDTO: GetWishlistDTO): Promise<any> {
@@ -147,16 +175,28 @@ export class ProductService {
       user.wishLists = [];
     }
     const wishlist = user.wishLists.find((item) => item.name === getWishlistDTO.wishListName);
+    if (!wishlist) {
+      throw new HttpException('Wishlist not found', 400);
+    }
+    return {message: 'Wishlist found', wishlist};
   }
   
   async deleteWishlist(userId: string, deleteWishlistDTO: DeleteWishlistDTO): Promise<any> {
     const user = await this.userModel.findById(userId);
+    console.log(user);
     if (!user.wishLists) {
       user.wishLists = [];
     }
     user.wishLists = user.wishLists.filter((item) => item.name !== deleteWishlistDTO.wishListName);
-    await user.save();
-    return user.wishLists;
+    await this.userModel.updateOne({
+      _id: userId
+    }, {
+      $set: {
+        wishLists: user.wishLists
+      }
+    });
+    console.log(user);
+    return {message: 'Wishlist deleted', wishlists: user.wishLists};
   }
 
   async getAllWishlists(userId: string): Promise<any> {
@@ -166,6 +206,7 @@ export class ProductService {
     }
     return user.wishLists;
   }
+
   async getAllFavs(userId: string): Promise<any> {
     const user = await this.userModel.findById(userId);
     if (!user.fav) {
@@ -173,7 +214,6 @@ export class ProductService {
     }
     return user.fav;
   }
-
   // add fav
   async addFav(userId: string, favDTO: FavDTO): Promise<any> {
     const user = await this.userModel.findById(userId);
@@ -184,6 +224,7 @@ export class ProductService {
     await user.save();
     return user.fav;
   }
+
   async removeFavorite(userId: string, favDTO: deleteFavDTO): Promise<any> {
     const user = await this.userModel.findById(userId);
     if (!user.fav) {
@@ -195,6 +236,5 @@ export class ProductService {
     
     return user.fav;
   }
-  
 
 }

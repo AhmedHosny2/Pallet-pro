@@ -25,7 +25,8 @@ export interface User extends Document {
             id: string;
             price: number;
             amount: number;
-            images: string;
+            image: string;
+            name: string;
         }[];
      }[];
 }

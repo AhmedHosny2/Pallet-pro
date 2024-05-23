@@ -33,6 +33,12 @@ export class AuthController {
     }
   }
 
+  @Get('resend-verification-email/:email')
+  async resendVerificationEmail(@Param() params: any): Promise< string > {
+    await this.authService.resendVerificationEmail(params.email);
+    return 'Verification email sent successfully.';
+  }
+
   @Post('login') // hena hatob2a b /auth/login
   async login(@Body() loginDto: LoginDto, @Response() res: Res): Promise<any> { //to be done: change this to jwt token instead of session id
     const user = await this.authService.login(loginDto);

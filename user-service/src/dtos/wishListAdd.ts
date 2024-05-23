@@ -7,6 +7,14 @@ export class AddToWishlistDTO {
 
     @IsString()
     @IsNotEmpty()
+    productName: string;
+
+    @IsString()
+    @IsNotEmpty()
+    image: string;
+
+    @IsString()
+    @IsNotEmpty()
     productId: string;
 
     @IsNumber()
@@ -22,7 +30,8 @@ export class AddToWishlistDTO {
             wishListName: this.wishListName,
             productId: this.productId,
             price: this.price,
-            amount: this.amount
+            amount: this.amount,
+            productName: this.productName
         });
     }
 }

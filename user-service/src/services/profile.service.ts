@@ -126,7 +126,7 @@ export class ProfileService {
     return {user, address};
   }
   
-  async updatePassword(userId: string): Promise<String> {
+  async updatePassword(userId: string): Promise<any> {
     const user = await this.userModel.findById(userId);
     const email = user.email;
     const code = Math.floor(100000 + Math.random() * 900000);
@@ -142,7 +142,7 @@ export class ProfileService {
     }
     , 300000); //5 minutes
     await this.produceEvent('pre_update_password', userId);
-    return "Code sent to email";
+    return {message: 'Code sent to email'};
   }
   
   async confirmUpdatePassword(userId: string, updatePasswordDTO: ConfirmUpdatePasswordDTO): Promise<User> {
@@ -204,7 +204,7 @@ export class ProfileService {
     return user;
   }
 
-  async deleteProfile(userId: string): Promise<String> {
+  async deleteProfile(userId: string): Promise<any> {
     await this.produceEvent('pre_delete_profile', userId); //Send email for confirmation
     const user = await this.userModel.findById(userId);
     const email = user.email;
@@ -220,14 +220,15 @@ export class ProfileService {
       this.deleteAccountsCodes.delete(userId);
     }
     , 300000); //5 minutes
-    return "Code sent to email";
+    return {message: 'Code sent to email'};
   }
 
-  async confirmDeleteProfile(userId: string, code: number): Promise<String> {
+  async confirmDeleteProfile(userId: string, code: number): Promise<any> {
     if (!this.deleteAccountsCodes.has(userId)) {
       throw new HttpException('No code sent/Code Expired', 400);
     }
-    if (this.deleteAccountsCodes.get(userId) !== code) {
+    console.log('Codes:', this.deleteAccountsCodes.get(userId), code);
+    if (this.deleteAccountsCodes.get(userId) != code) {
       throw new HttpException('Invalid code', 400);
     }
     this.deleteAccountsCodes.delete(userId);
@@ -244,7 +245,7 @@ export class ProfileService {
     // To be implemented
 
     await this.produceEvent('post_delete_profile', user);
-    return "Account deleted successfully";
+    return {message: 'Account deleted'};
   }
 
   async getAllAddresses(userId: string) {//
@@ -263,6 +264,10 @@ export class ProfileService {
       throw new HttpException('Missing fields', 400);
     }
     console.log('Create Address:', userId, address);
+    const addressExists = await this.addressModel.findOne({ user_id: userId, name: address.name });
+    if (addressExists) {
+      throw new HttpException('Address already exists', 400);
+    }
     const newAddress = await this.addressModel.create({
       _id: new mongoose.Types.ObjectId(),
       user_id: userId, 
@@ -300,7 +305,9 @@ export class ProfileService {
     if (user.selected_address_id.toString() == addressId) {
       throw new HttpException('Cannot delete selected address', 400);
     }
-    const deletedAddress = await this.addressModel.findOneAndDelete({ user_id: userId, _id: addressId });
+    console.log('Delete Address:', userId, addressId);
+    const deletedAddress = await this.addressModel.findOneAndDelete({ _id: addressId });
+    console.log('Deleted Address:', deletedAddress);
     await this.produceEvent('delete_address', deletedAddress);
     return deletedAddress;
   }
