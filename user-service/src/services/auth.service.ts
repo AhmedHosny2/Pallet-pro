@@ -38,7 +38,7 @@ export class AuthService {
 
     this.kafka = new Kafka({
       clientId: 'user-service',
-      brokers: ['localhost:9092'],
+      brokers: ['kafka:9092'],
     });
     this.producer = this.kafka.producer();
     this.consumer = this.kafka.consumer({ groupId: 'user-service-group' });
