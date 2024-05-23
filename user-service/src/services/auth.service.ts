@@ -151,10 +151,25 @@ export class AuthService {
   async register(registerDto: RegisterDTO): Promise<User> {
     try {
       if (!registerDto.email || !registerDto.password || !registerDto.first_name || !registerDto.last_name || !registerDto.address_name || !registerDto.country || !registerDto.city || !registerDto.address_line_1 || !registerDto.zip_code) {
-        throw new Error('Missing required fields');
+        throw new HttpException('Missing required fields', 400);
+      }
+      if (registerDto.password.length < 8) {
+        throw new HttpException('Password must be at least 8 characters long', 400);
+      }
+      if (registerDto.email.match(/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/) === null) {
+        throw new HttpException('Invalid email address', 400);
+      }
+      if (registerDto.phone_number.match(/^[0-9]{11}$/) === null) {
+        throw new HttpException('Invalid phone number', 400);
+      }
+      if (registerDto.zip_code.match(/^[0-9]{5}$/) === null) {
+        throw new HttpException('Invalid zip code', 400);
+      }
+      if (registerDto.country.length < 3) {
+        throw new HttpException('Invalid country', 400);
       }
       if (await this.findUserByEmail(registerDto.email)) {
-        throw new Error('User already exists');
+        throw new HttpException('User already exists', 400);
       }
       const hashedPassword = await hash(registerDto.password, 10);
       console.log('Password hashed successfully:', hashedPassword);
@@ -171,7 +186,7 @@ export class AuthService {
       return registeredUser;  
     } catch (error) {
       console.error('Error registering user:', error);
-      throw error;
+      throw new HttpException('Error registering user ' + error, 400);
     }
   }
 
@@ -291,8 +306,19 @@ export class AuthService {
     });
   }
 
+  async resendVerificationEmail(email: string): Promise<void> {
+    const user = await this.userModel.findOne({email});
+    if (!user) {
+      throw new HttpException('User not found', 400);
+    }
+    if (user.verified) {
+      throw new HttpException('User already verified', 400);
+    }
+    await this.sendVerificationEmail(email, user.verificationCode);
+  }
+
   async sendVerificationEmail(email: string, verificationCode: string): Promise<void> {
-    const content = `<p>Your verification link is: ${"http://localhost:5000/auth/verify-email/" + verificationCode}</p>`;
+    const content = `<p>Your verification link is: ${"http://localhost:5001/auth/verify-email/" + verificationCode}</p>`;
     await this.sendEmail(email, 'Email Verification Link', content);
     await this.userModel.updateOne({ email },{ verificationCode })
   }
