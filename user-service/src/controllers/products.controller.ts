@@ -29,6 +29,7 @@ export class ProductsController {
   @Get('wishlist')
   @UseGuards(JwtAuthGuard)
   async getWishlist(@Request() req, @Body() getWishlistDTO: GetWishlistDTO): Promise<any> {
+    console.log('getWishlistDTO:', getWishlistDTO);
     const userId = req.user?.userId;
     return this.productService.getWishlist(userId, getWishlistDTO);
   }
@@ -36,6 +37,7 @@ export class ProductsController {
   @Post('wishlist')
   @UseGuards(JwtAuthGuard)
   async createWishlist(@Request() req, @Body() createWishlistDTO: CreateWishlistDTO): Promise<any> {
+    console.log('createWishlistDTO:', createWishlistDTO);
     const userId = req.user?.userId;
     return this.productService.createWishlist(userId, createWishlistDTO);
   }
@@ -43,6 +45,7 @@ export class ProductsController {
   @Put('wishlist/add')
   @UseGuards(JwtAuthGuard)
   async addToWishlist(@Request() req, @Body() addToWishlistDTO: AddToWishlistDTO): Promise<any> {
+    console.log('addToWishlistDTO:', addToWishlistDTO);
     const userId = req.user?.userId;
     return this.productService.addToWishlist(userId, addToWishlistDTO);
   }
@@ -50,6 +53,7 @@ export class ProductsController {
   @Put('wishlist/remove')
   @UseGuards(JwtAuthGuard)
   async removeFromWishlist(@Request() req, @Body() removeFromWishlistDTO: RemoveFromWishlistDTO): Promise<any> {
+    console.log('removeFromWishlistDTO:', removeFromWishlistDTO);
     const userId = req.user?.userId;
     return this.productService.removeFromWishlist(userId, removeFromWishlistDTO);
   }
@@ -57,6 +61,7 @@ export class ProductsController {
   @Delete('wishlist')
   @UseGuards(JwtAuthGuard)
   async deleteWishlist(@Request() req, @Body() deleteWishlistDTO: DeleteWishlistDTO): Promise<any> {
+    console.log('deleteWishlistDTO:', deleteWishlistDTO);
     const userId = req.user?.userId;
     return this.productService.deleteWishlist(userId, deleteWishlistDTO);
   }
