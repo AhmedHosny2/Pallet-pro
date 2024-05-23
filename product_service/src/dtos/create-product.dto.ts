@@ -27,6 +27,14 @@ export class CreateProductDto {
 
   @IsNotEmpty()
   colors: number;
+// related
+  relatedProducts:
+  {
+  productId: string;
+  name: string;
+  price: number;
+  images: string;
+  }[];
 
 
   toString() {

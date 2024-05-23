@@ -23,6 +23,14 @@ readonly colors:number;
         review: string;
       
         }[];
+        relatedProducts:
+        {
+        productId: string;
+        name: string;
+        price: number;
+        images: string;
+        }[];
+
 }
 
 
