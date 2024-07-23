@@ -23,7 +23,7 @@ export class ProductService implements OnModuleInit, OnModuleDestroy {
   ) {
     this.kafka = new Kafka({
       clientId: 'product-service',
-      brokers: ['localhost:9092'],
+      brokers: ['kafka:9092'],
     });
     this.producer = this.kafka.producer({});
     this.consumer = this.kafka.consumer({ groupId: 'product-service-group' });

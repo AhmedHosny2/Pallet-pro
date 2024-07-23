@@ -21,6 +21,15 @@ services:
       KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
 
+  product-service:
+    build: ../product_service
+    ports:
+      - "3002:3002"
+    environment:
+      KAFKA_BROKER: kafka:9092
+    depends_on:
+      - kafka
+
   user-service:
     build: .
     ports:
