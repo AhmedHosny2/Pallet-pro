@@ -1,18 +1,12 @@
 
 # Pallet Pro
 
-![Pallet Pro](https://github.com/user-attachments/assets/a1d9aedf-9ba2-437c-9124-4f87489bb6c9 "Homepage" width="1000")
+![Pallet Pro](https://github.com/user-attachments/assets/a1d9aedf-9ba2-437c-9124-4f87489bb6c9 "Homepage" )
 
-## Frontend Repository
-[Here](https://github.com/AhmedHosny2/Pallet-pro-frontend)
-
-## Demo
-You can watch a walkthrough of the website from [Here]().
+### Frontend Repository [Here](https://github.com/AhmedHosny2/Pallet-pro-frontend)
 
 ## Table of Contents
 - [Project Title](#pallet-pro)
-- [Demo](#demo)
-- [Table of Contents](#table-of-contents)
 - [Description](#description)
 - [Technology Stack](#technology-stack)
 - [Microservices and Ports](#microservices-and-ports)
@@ -65,32 +59,36 @@ PORT=<port_number>
 - Responsive design for all devices
 
 ## Preview
+### Home Page 
+<video width="1000" controls autoplay loop>
+  <source src="https://github.com/user-attachments/assets/1b590aaf-7723-4a35-a2f8-6310fd9e322a" type="video/mp4">
+  Your browser does not support the video tag.
+</video>
 
 ### Products
-![Home Page Screenshot](https://github.com/user-attachments/assets/298ad7a8-cdad-425f-b511-91156d119912 "Home Page" width="1000")
+![Home Page Screenshot](https://github.com/user-attachments/assets/298ad7a8-cdad-425f-b511-91156d119912 "Home Page")
 
 ### Pallet Customization
-<video width="1000" controls>
+<video width="1000" controls autoplay loop>
   <source src="https://github.com/user-attachments/assets/3f3ac386-7ce3-4cb1-8cb6-f2da912d0555" type="video/mp4">
   Your browser does not support the video tag.
 </video>
 
 ### Log In
-![Pallet Customization Screenshot](https://github.com/user-attachments/assets/6aac8d82-5d46-469f-8b70-0b07484e031a "Pallet Customization" width="1000")
+![Log In Screenshot](https://github.com/user-attachments/assets/6aac8d82-5d46-469f-8b70-0b07484e031a "Log In")
 
 ### User Profile
-![Pallet Customization Screenshot](https://github.com/user-attachments/assets/611b6c77-7475-41a3-ab1d-b324c807ad8f "Pallet Customization" width="1000")
+![User Profile Screenshot](https://github.com/user-attachments/assets/611b6c77-7475-41a3-ab1d-b324c807ad8f "User Profile")
 
 ### Cart
-<video width="1000" controls>
+<video width="1000" controls autoplay loop>
   <source src="https://github.com/user-attachments/assets/e045eee2-df21-474f-ad30-78f2b1308164" type="video/mp4">
   Your browser does not support the video tag.
 </video>
 
 ### Check out
-![Pallet Customization Screenshot](https://github.com/user-attachments/assets/2e13ca57-b831-4d45-9b12-2bc6105f3e37 "Pallet Customization" width="1000")
+![Check Out Screenshot](https://github.com/user-attachments/assets/2e13ca57-b831-4d45-9b12-2bc6105f3e37 "Check Out")
 
 ## Contributors
 - Ahmed Yehia [Github](https://github.com/AhmedHosny2) [LinkedIn](https://www.linkedin.com/in/ahmed-yehia-155629206/)
 - Mohamed Tamer [Github](https://github.com/MooTamer) [LinkedIn](https://www.linkedin.com/in/mohamed-tamer-020a5221a/)
-```
