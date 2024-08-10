@@ -60,19 +60,19 @@ PORT=<port_number>
 
 ## Preview
 ### Home Page 
-<video width="1000" controls autoplay loop>
-  <source src="https://github.com/user-attachments/assets/1b590aaf-7723-4a35-a2f8-6310fd9e322a" type="video/mp4">
-  Your browser does not support the video tag.
-</video>
+
+
+https://github.com/user-attachments/assets/453644ff-74bb-406c-8916-4494703f6448
+
 
 ### Products
 ![Home Page Screenshot](https://github.com/user-attachments/assets/298ad7a8-cdad-425f-b511-91156d119912 "Home Page")
 
 ### Pallet Customization
-<video width="1000" controls autoplay loop>
-  <source src="https://github.com/user-attachments/assets/3f3ac386-7ce3-4cb1-8cb6-f2da912d0555" type="video/mp4">
-  Your browser does not support the video tag.
-</video>
+
+
+Uploading Design Pallet video.mp4…
+
 
 ### Log In
 ![Log In Screenshot](https://github.com/user-attachments/assets/6aac8d82-5d46-469f-8b70-0b07484e031a "Log In")
@@ -81,10 +81,11 @@ PORT=<port_number>
 ![User Profile Screenshot](https://github.com/user-attachments/assets/611b6c77-7475-41a3-ab1d-b324c807ad8f "User Profile")
 
 ### Cart
-<video width="1000" controls autoplay loop>
-  <source src="https://github.com/user-attachments/assets/e045eee2-df21-474f-ad30-78f2b1308164" type="video/mp4">
-  Your browser does not support the video tag.
-</video>
+
+
+
+https://github.com/user-attachments/assets/94d3a39b-5d9c-42d2-9bf1-5d9921785a90
+
 
 ### Check out
 ![Check Out Screenshot](https://github.com/user-attachments/assets/2e13ca57-b831-4d45-9b12-2bc6105f3e37 "Check Out")
