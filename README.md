@@ -3,8 +3,10 @@
 
 
 
-   <img src="https://github.com/user-attachments/assets/4b7c6b1c-52b5-47bd-ab53-e2db16ff3ee6
-" alt="Home page video" title="Homepage" width="1000">
+
+
+
+   <img src="https://github.com/user-attachments/assets/c3e18ed7-27f9-4d09-b30d-2a367ad60b57" alt="Home page video" title="Homepage" width="1000">
    <h4>Frontend Repository <a href="https://github.com/AhmedHosny2/Pallet-pro-frontend" target="_blank">Here</a></h4>
    <h2>Demo</h2>
    <h4>You can watch a walkthrough of the website from <a href="" target="_blank">Here</a></h4>
@@ -85,9 +87,12 @@
 
 
 
+
+
+
    <h3>Pallet Customization</h3>
    <br>
-   <img src="README_Files/PalletCustomization.png" alt="Pallet Customization Screenshot" title="Pallet Customization" width="1000">
+   <img src="https://github.com/user-attachments/assets/adc6389f-7ee9-4c5f-9f6e-7a19fb9949d2" alt="Pallet Customization Screenshot" title="Pallet Customization" width="1000">
    <br>
 
    <h3>Log In </h3>
@@ -105,9 +110,12 @@
 
 
 
+
+
+
  <h3>Cart</h3>
    <br>
-   <img src="https://github.com/user-attachments/assets/f7684ff3-a6b2-4a12-9256-5195477b8239" alt="Pallet Customization Screenshot" title="Pallet Customization" width="1000">
+   <img src="https://github.com/user-attachments/assets/f6fb5bae-c43f-42c0-a101-e73a281f24ae" alt="Pallet Customization Screenshot" title="Pallet Customization" width="1000">
    <br>
    
    
