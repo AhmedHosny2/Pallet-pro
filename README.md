@@ -2,14 +2,10 @@
 <h1>Pallet Pro</h1>
 
 
+https://github.com/user-attachments/assets/ece229d3-affa-4b07-8804-1d55d0492ded
 
 
 
-
- <video width="1000" controls>
-                <source src="https://github.com/user-attachments/assets/ebf1122e-3799-42bf-a5d3-eba9cbd5fe81" type="video/mp4">
-                Your browser does not support the video tag.
-            </video>
         
         <h4>Frontend Repository <a href="https://github.com/AhmedHosny2/Pallet-pro-frontend" target="_blank">Here</a></h4>
    <h2>Demo</h2>
