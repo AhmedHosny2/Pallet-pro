@@ -71,7 +71,10 @@ https://github.com/user-attachments/assets/453644ff-74bb-406c-8916-4494703f6448
 ### Pallet Customization
 
 
-Uploading Design Pallet video.mp4…
+
+https://github.com/user-attachments/assets/9ffe32cf-99e4-48e7-8711-69c4075dd751
+
+
 
 
 ### Log In
