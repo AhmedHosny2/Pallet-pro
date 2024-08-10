@@ -23,12 +23,14 @@ import { ProductService } from './services/product.service';
 import { MiddlewareConsumer, NestModule } from '@nestjs/common';
 import * as session from 'express-session';
 import { SessionMiddleware } from './session.middleware';
+import { OrdersController } from './controllers/orders.controller';
+import { OrderService } from './services/order.service';
 
 @Module({
   imports: [ // the modules that will be imported, we will use MongooseModule to connect to the MongoDB database
     ClientsModule.register([
       { name: 'CART_SERVICE', transport: Transport.KAFKA, 
-      options: { client: { brokers: ['localhost:9092'], clientId: 'cart-service' } , consumer: { groupId: 'cart-service-group' }}},
+      options: { client: { brokers: ['kafka:9092'], clientId: 'cart-service' } , consumer: { groupId: 'cart-service-group' }}},
     ]),
     MongooseModule.forRootAsync({
       useFactory: () => ({
@@ -58,8 +60,8 @@ import { SessionMiddleware } from './session.middleware';
     }),
    // JwtModule.register({})
   ],
-  controllers: [AuthController, CartController, ProductsController, ProfileController], // to handle requests and responses, they define the routes and the corresponding HTTP request methods
-  providers: [AuthService, ...identityProviders, ...databaseProviders,JwtModule, LocalStrategy,JwtStrategy, CartService, ProfileService, ProductService], // to define components within the application that can be injected into other components
+  controllers: [AuthController, CartController, ProductsController, ProfileController, OrdersController], // to handle requests and responses, they define the routes and the corresponding HTTP request methods
+  providers: [AuthService, ...identityProviders, ...databaseProviders,JwtModule, LocalStrategy,JwtStrategy, CartService, ProfileService, ProductService, OrderService], // to define components within the application that can be injected into other components
   exports: [...databaseProviders] // which providers should be available to other modules to import
 })
 export class AppModule implements NestModule {

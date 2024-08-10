@@ -29,6 +29,22 @@ export interface User extends Document {
             name: string;
         }[];
      }[];
+     orders: {
+        id: string;
+        user_id: string;
+        price: number;
+        status: string;
+        addressId: string;
+        products: {
+            id: string;
+            itemPrice: number;
+            amount: number;
+            image: string;
+            name: string;
+        }[];
+        created_at: Date;
+        updated_at: Date;
+    }[];
 }
 
 /*
