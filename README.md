@@ -1,6 +1,10 @@
 <html>
 <h1>Pallet Pro</h1>
-   <img src="README_Files/Landing.gif" alt="Alt text" title="Homepage" width="1000">
+
+
+
+   <img src="https://github.com/user-attachments/assets/4b7c6b1c-52b5-47bd-ab53-e2db16ff3ee6
+" alt="Home page video" title="Homepage" width="1000">
    <h4>Frontend Repository <a href="https://github.com/AhmedHosny2/Pallet-pro-frontend" target="_blank">Here</a></h4>
    <h2>Demo</h2>
    <h4>You can watch a walkthrough of the website from <a href="" target="_blank">Here</a></h4>
@@ -72,14 +76,53 @@
    </ul>
    <h2>Preview</h2>
    <br>
-   <h3>Home Page</h3>
+   <h3>Products</h3>
    <br>
-   <img src="README_Files/HomePage.png" alt="Home Page Screenshot" title="Home Page" width="1000">
+
+   <img src="https://github.com/user-attachments/assets/298ad7a8-cdad-425f-b511-91156d119912" alt="Home Page Screenshot" title="Home Page" width="1000">
    <br>
+   
+
+
+
    <h3>Pallet Customization</h3>
    <br>
    <img src="README_Files/PalletCustomization.png" alt="Pallet Customization Screenshot" title="Pallet Customization" width="1000">
    <br>
+
+   <h3>Log In </h3>
+   <br>
+   <img src="https://github.com/user-attachments/assets/6aac8d82-5d46-469f-8b70-0b07484e031a" alt="Pallet Customization Screenshot" title="Pallet Customization" width="1000">
+   <br>
+
+ <h3>User Profile</h3>
+   <br>
+   <img src="https://github.com/user-attachments/assets/611b6c77-7475-41a3-ab1d-b324c807ad8f" alt="Pallet Customization Screenshot" title="Pallet Customization" width="1000">
+   <br>
+
+
+
+
+
+
+ <h3>Cart</h3>
+   <br>
+   <img src="https://github.com/user-attachments/assets/f7684ff3-a6b2-4a12-9256-5195477b8239" alt="Pallet Customization Screenshot" title="Pallet Customization" width="1000">
+   <br>
+   
+   
+   <h3>Check out</h3>
+   <br>
+   <img src="https://github.com/user-attachments/assets/2e13ca57-b831-4d45-9b12-2bc6105f3e37" alt="Pallet Customization Screenshot" title="Pallet Customization" width="1000">
+   <br>
+
+
+
+   
+  
+
+   
+   
    <h2>Contributors</h2>
    <ul>
        <li>Ahmed Yehia <a href="https://github.com/AhmedHosny2" target="_blank">Github</a> <a href="https://www.linkedin.com/in/ahmed-yehia-155629206/" target="_blank">LinkedIn</a></li>
