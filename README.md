@@ -2,9 +2,7 @@
 <h1>Pallet Pro</h1>
 
 
-https://github.com/user-attachments/assets/ece229d3-affa-4b07-8804-1d55d0492ded
-
-
+   <img src="https://github.com/user-attachments/assets/a1d9aedf-9ba2-437c-9124-4f87489bb6c9" alt="Alt text" title="Homepage" width="1000">
 
         
         <h4>Frontend Repository <a href="https://github.com/AhmedHosny2/Pallet-pro-frontend" target="_blank">Here</a></h4>
