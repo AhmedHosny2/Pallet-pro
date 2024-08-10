@@ -96,3 +96,7 @@ https://github.com/user-attachments/assets/94d3a39b-5d9c-42d2-9bf1-5d9921785a90
 ## Contributors
 - Ahmed Yehia [Github](https://github.com/AhmedHosny2) [LinkedIn](https://www.linkedin.com/in/ahmed-yehia-155629206/)
 - Mohamed Tamer [Github](https://github.com/MooTamer) [LinkedIn](https://www.linkedin.com/in/mohamed-tamer-020a5221a/)
+- Mazen Elshiny [Github](https://github.com/mznmo) [LinkedIn](https://www.linkedin.com/in/mazen-elshiny/)
+- Mostafa Ramadan [Github](https://github.com/mostafaHossamEldin) [LinkedIn](https://www.linkedin.com/in/mosvdh/)
+- Omar Dawood [Github](https://github.com/CrashOfTheTitans) [LinkedIn](https://www.linkedin.com/in/omardawood/)
+  
